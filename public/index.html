@@ -279,7 +279,7 @@ input{font-family:inherit}
   text-align:center;animation:loginIn .4s ease;
 }
 @keyframes loginIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.login-logo{height:84px;width:auto;margin:0 auto 6px;display:block}
+.login-logo{width:210px;height:auto;margin:4px auto 24px;display:block}
 .login-logo-svg{width:120px;height:84px;margin:0 auto 6px;display:block}
 .login-title{font-size:22px;margin-top:14px}
 .login-sub{font-size:13px;color:var(--text-secondary);margin-top:4px;margin-bottom:26px}
@@ -336,20 +336,22 @@ input{font-family:inherit}
 <!-- ============ LOGIN ============ -->
 <div id="login-screen">
   <div class="login-card">
-    <img class="login-logo" src="logo.png" alt="OptiCorte" onerror="this.style.display='none';document.getElementById('login-logo-svg').style.display='block'">
-    <svg id="login-logo-svg" class="login-logo-svg" style="display:none" viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="llB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E86E0"/><stop offset="1" stop-color="#1557B0"/></linearGradient>
-        <linearGradient id="llO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9A04B"/><stop offset="1" stop-color="#E06A0A"/></linearGradient>
-      </defs>
-      <path d="M8 34 L52 20 L52 56 L8 70 Z" fill="url(#llB)"/>
-      <path d="M18 36 L34 48 M38 28 L26 54 M46 38 L32 56" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
-      <rect x="58" y="28" width="50" height="26" rx="4" fill="url(#llO)" transform="rotate(-6 83 41)"/>
-      <ellipse cx="104" cy="39" rx="5" ry="13" fill="#C95A06" transform="rotate(-6 104 39)"/>
-      <path d="M66 37 h32 M66 45 h32" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7" transform="rotate(-6 83 41)"/>
-    </svg>
-    <h1 class="login-title"><span style="color:var(--blue)">Opti</span><span style="color:var(--orange)">Corte</span></h1>
-    <p class="login-sub">Software de Optimización Industrial</p>
+    <img class="login-logo" src="logo.png" alt="OptiCorte" onerror="this.style.display='none';document.getElementById('login-fallback').style.display='block'">
+    <div id="login-fallback" style="display:none">
+      <svg class="login-logo-svg" viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="llB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E86E0"/><stop offset="1" stop-color="#1557B0"/></linearGradient>
+          <linearGradient id="llO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9A04B"/><stop offset="1" stop-color="#E06A0A"/></linearGradient>
+        </defs>
+        <path d="M8 34 L52 20 L52 56 L8 70 Z" fill="url(#llB)"/>
+        <path d="M18 36 L34 48 M38 28 L26 54 M46 38 L32 56" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+        <rect x="58" y="28" width="50" height="26" rx="4" fill="url(#llO)" transform="rotate(-6 83 41)"/>
+        <ellipse cx="104" cy="39" rx="5" ry="13" fill="#C95A06" transform="rotate(-6 104 39)"/>
+        <path d="M66 37 h32 M66 45 h32" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7" transform="rotate(-6 83 41)"/>
+      </svg>
+      <h1 class="login-title"><span style="color:var(--blue)">Opti</span><span style="color:var(--orange)">Corte</span></h1>
+      <p class="login-sub">Software de Optimización Industrial</p>
+    </div>
 
     <div class="login-error" id="login-error"></div>
 
@@ -381,7 +383,7 @@ input{font-family:inherit}
 <div id="app-shell" class="hidden">
 <header class="header">
   <div class="brand">
-    <img class="logo-img" src="logo.png" alt="OptiCorte" onerror="this.closest('.brand').classList.add('no-img');this.style.display='none'">
+    <img class="logo-img" src="logo-mark.png" alt="OptiCorte" onerror="this.closest('.brand').classList.add('no-img');this.style.display='none'">
     <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="lgBlue" x1="0" y1="0" x2="1" y2="1">
