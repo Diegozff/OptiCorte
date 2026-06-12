@@ -176,6 +176,7 @@ input{font-family:inherit}
 .mat-chip.active{background:var(--grad-btn);color:#fff;border-color:transparent}
 .mat-chip.orange:hover{border-color:var(--orange);color:var(--orange)}
 .mat-chip.orange.active{background:var(--grad-orange);color:#fff;border-color:transparent}
+.mat-chip .mat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.12) inset}
 .mat-chip .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mat-chip .x{font-size:12px;width:16px;height:16px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;opacity:.65;flex-shrink:0}
 .mat-chip .x:hover{background:rgba(255,255,255,.28);opacity:1}
@@ -608,7 +609,7 @@ input{font-family:inherit}
   </div>
 </div>
 
-<div id="print-header"
+<div id="print-header">
   <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E6FD9;padding-bottom:7px">
     <div>
       <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em"><span style="color:#1E6FD9">Opti</span><span style="color:#F58220">Corte</span></div>
@@ -742,6 +743,7 @@ input{font-family:inherit}
 const OptiCorte = (function(){
 
 const PALETTE = ['#1E6FD9','#F58220','#2ECC71','#9B59B6','#16A085','#E84393','#F1C40F','#0EA5E9','#EF5350','#475569'];
+const MAT_COLORS = ['#1E6FD9','#F58220','#8E44AD','#16A085','#E84393','#2E86E0','#E67E22','#27AE60','#C0392B','#0EA5E9'];
 
 const state = {
   activeTab:'chapas',
@@ -749,8 +751,8 @@ const state = {
   canos:{ mats:[], active:0 }
 };
 let chSeq=0, caSeq=0;
-function newChMat(o){ return Object.assign({ id:'chm'+(++chSeq), largo:3000, ancho:1500, espesor:'', gap:5, margen:10, piezas:[], result:null, cur:0 }, o||{}); }
-function newCaMat(o){ return Object.assign({ id:'cam'+(++caSeq), largo:6000, sangria:3, reuse:200, desc:'', cortes:[], result:null }, o||{}); }
+function newChMat(o){ const m=Object.assign({ id:'chm'+(++chSeq), color:'', largo:3000, ancho:1500, espesor:'', gap:5, margen:10, piezas:[], result:null, cur:0 }, o||{}); if(!m.color) m.color=MAT_COLORS[(chSeq-1)%MAT_COLORS.length]; return m; }
+function newCaMat(o){ const m=Object.assign({ id:'cam'+(++caSeq), color:'', largo:6000, sangria:3, reuse:200, desc:'', cortes:[], result:null }, o||{}); if(!m.color) m.color=MAT_COLORS[(caSeq-1)%MAT_COLORS.length]; return m; }
 function chM(){ return state.chapas.mats[state.chapas.active]; }
 function caM(){ return state.canos.mats[state.canos.active]; }
 function chLabel(m,i){ return (m.espesor&&String(m.espesor).trim())||('Chapa '+(i+1)); }
@@ -786,7 +788,8 @@ function renderChMats(){
   cont.innerHTML = state.chapas.mats.map((m,i)=>{
     const act=i===state.chapas.active;
     const x = state.chapas.mats.length>1? `<span class="x" data-rm="${i}" title="Quitar material">✕</span>`:'';
-    return `<button class="mat-chip${act?' active':''}" data-sel="${i}"><span class="lbl">${esc(chLabel(m,i))}</span>${x}</button>`;
+    const st = act? ` style="background:${m.color};border-color:transparent"`:'';
+    return `<button class="mat-chip${act?' active':''}" data-sel="${i}"${st}><span class="mat-dot" style="background:${act?'rgba(255,255,255,.9)':m.color}"></span><span class="lbl">${esc(chLabel(m,i))}</span>${x}</button>`;
   }).join('') + `<button class="mat-add" id="ch-mat-add">+ Material</button>`;
   cont.querySelectorAll('[data-sel]').forEach(b=>b.onclick=e=>{ if(e.target.dataset.rm!=null) return; selectChMat(+b.dataset.sel); });
   cont.querySelectorAll('[data-rm]').forEach(s=>s.onclick=e=>{ e.stopPropagation(); removeChMat(+s.dataset.rm); });
@@ -804,7 +807,8 @@ function renderCaMats(){
   cont.innerHTML = state.canos.mats.map((m,i)=>{
     const act=i===state.canos.active;
     const x = state.canos.mats.length>1? `<span class="x" data-rm="${i}" title="Quitar perfil">✕</span>`:'';
-    return `<button class="mat-chip orange${act?' active':''}" data-sel="${i}"><span class="lbl">${esc(caLabel(m,i))}</span>${x}</button>`;
+    const st = act? ` style="background:${m.color};border-color:transparent"`:'';
+    return `<button class="mat-chip orange${act?' active':''}" data-sel="${i}"${st}><span class="mat-dot" style="background:${act?'rgba(255,255,255,.9)':m.color}"></span><span class="lbl">${esc(caLabel(m,i))}</span>${x}</button>`;
   }).join('') + `<button class="mat-add" id="ca-mat-add">+ Perfil</button>`;
   cont.querySelectorAll('[data-sel]').forEach(b=>b.onclick=e=>{ if(e.target.dataset.rm!=null) return; selectCaMat(+b.dataset.sel); });
   cont.querySelectorAll('[data-rm]').forEach(s=>s.onclick=e=>{ e.stopPropagation(); removeCaMat(+s.dataset.rm); });
@@ -991,8 +995,8 @@ function renderChapasResult(){
       <table class="tbl-result"><thead><tr><th>Material</th><th>Chapas</th><th>Aprovech.</th><th>Piezas</th></tr></thead><tbody>`;
     mats.forEach((m,i)=>{
       if(m.result){ const k=m.result.kpi;
-        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><strong>${esc(chLabel(m,i))}</strong> <span class="muted">${m.result.L}×${m.result.W}</span></td><td>${k.nSheets}</td><td>${fmt(k.avgUtil)}%</td><td>${k.placed}/${k.req}</td></tr>`;
-      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><strong>${esc(chLabel(m,i))}</strong></td><td colspan="3" class="muted">— pendiente de calcular —</td></tr>`;
+        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><span class="swatch" style="background:${m.color}"></span><strong>${esc(chLabel(m,i))}</strong> <span class="muted">${m.result.L}×${m.result.W}</span></td><td>${k.nSheets}</td><td>${fmt(k.avgUtil)}%</td><td>${k.placed}/${k.req}</td></tr>`;
+      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><span class="swatch" style="background:${m.color}"></span><strong>${esc(chLabel(m,i))}</strong></td><td colspan="3" class="muted">— pendiente de calcular —</td></tr>`;
     });
     html+=`</tbody></table></div>`;
   }
@@ -1001,7 +1005,7 @@ function renderChapasResult(){
     if(!m.result) return;
     const r=m.result, k=r.kpi, multi=mats.length>1;
     html+=`<div class="mat-section">`;
-    if(multi) html+=`<div class="mat-sec-title"><span class="dot"></span>${esc(chLabel(m,i))} <span class="muted">· ${r.L}×${r.W} mm${r.esp?(' · '+esc(r.esp)):''}</span></div>`;
+    if(multi) html+=`<div class="mat-sec-title"><span class="dot" style="background:${m.color}"></span>${esc(chLabel(m,i))} <span class="muted">· ${r.L}×${r.W} mm${r.esp?(' · '+esc(r.esp)):''}</span></div>`;
     html+=`<div class="kpi-row">
       <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub">${esc(r.esp||'—')}</div></div>
       <div class="kpi k-green"><div class="k-label">Aprovechamiento prom.</div><div class="k-value">${fmt(k.avgUtil)}%</div><div class="k-sub">${r.L}×${r.W} mm</div></div>
@@ -1168,8 +1172,8 @@ function renderCanosResult(){
       <table class="tbl-result"><thead><tr><th>Perfil</th><th>Barras</th><th>Aprov.</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
     mats.forEach((m,i)=>{
       if(m.result){ const k=m.result.kpi;
-        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><strong>${esc(caLabel(m,i))}</strong> <span class="muted">${m.result.barL}mm</span></td><td>${k.nBars}</td><td>${fmt(k.util)}%</td><td>${fmt(k.desp)} mm</td><td>${fmt(k.sobra)} mm</td></tr>`;
-      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><strong>${esc(caLabel(m,i))}</strong></td><td colspan="4" class="muted">— pendiente de calcular —</td></tr>`;
+        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><span class="swatch" style="background:${m.color}"></span><strong>${esc(caLabel(m,i))}</strong> <span class="muted">${m.result.barL}mm</span></td><td>${k.nBars}</td><td>${fmt(k.util)}%</td><td>${fmt(k.desp)} mm</td><td>${fmt(k.sobra)} mm</td></tr>`;
+      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><span class="swatch" style="background:${m.color}"></span><strong>${esc(caLabel(m,i))}</strong></td><td colspan="4" class="muted">— pendiente de calcular —</td></tr>`;
     });
     html+=`</tbody></table></div>`;
   }
@@ -1178,7 +1182,7 @@ function renderCanosResult(){
     if(!m.result) return;
     const r=m.result, k=r.kpi, multi=mats.length>1;
     html+=`<div class="mat-section">`;
-    if(multi) html+=`<div class="mat-sec-title"><span class="dot orange"></span>${esc(caLabel(m,mi))} <span class="muted">· barra ${r.barL} mm</span></div>`;
+    if(multi) html+=`<div class="mat-sec-title"><span class="dot" style="background:${m.color}"></span>${esc(caLabel(m,mi))} <span class="muted">· barra ${r.barL} mm</span></div>`;
     html+=`<div class="kpi-row">
       <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub">${esc(r.desc||'—')}</div></div>
       <div class="kpi k-green"><div class="k-label">Aprovechamiento</div><div class="k-value">${fmt(k.util)}%</div><div class="k-sub">barra ${r.barL} mm</div></div>
@@ -1422,8 +1426,8 @@ function saveJob(){
     id: ot.toLowerCase(),
     savedAt: Date.now(),
     project:$('projectName').value, ot, oc:$('meta-oc').value.trim(), cliente:$('meta-cliente').value.trim(),
-    chapas:{ mats: state.chapas.mats.map(m=>({largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:m.piezas.map(p=>({...p}))})) },
-    canos:{ mats: state.canos.mats.map(m=>({largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,cortes:m.cortes.map(c=>({...c}))})) }
+    chapas:{ mats: state.chapas.mats.map(m=>({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:m.piezas.map(p=>({...p}))})) },
+    canos:{ mats: state.canos.mats.map(m=>({color:m.color,largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,cortes:m.cortes.map(c=>({...c}))})) }
   };
   const jobs=getJobs();
   const idx=jobs.findIndex(x=>x.id===job.id);
@@ -1468,7 +1472,7 @@ function loadJob(id){
   const ch=j.chapas||{}, ca=j.canos||{};
   // compatibilidad: formato viejo (un solo material) o nuevo (mats[])
   const chMats=(ch.mats&&ch.mats.length)?ch.mats:(ch.piezas?[ch]:[]);
-  state.chapas.mats = chMats.length? chMats.map(m=>newChMat({largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:(m.piezas||[]).map(p=>({...p}))})) : [newChMat()];
+  state.chapas.mats = chMats.length? chMats.map(m=>newChMat({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:(m.piezas||[]).map(p=>({...p}))})) : [newChMat()];
   state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats();
   const caMats=(ca.mats&&ca.mats.length)?ca.mats:(ca.cortes?[ca]:[]);
   state.canos.mats = caMats.length? caMats.map(m=>newCaMat({largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,cortes:(m.cortes||[]).map(c=>({...c}))})) : [newCaMat()];
