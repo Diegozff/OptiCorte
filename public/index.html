@@ -117,7 +117,53 @@ input{font-family:inherit}
 .meta-field input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
 .meta-field.ot input,.meta-field.oc input{width:120px}
 .meta-field.cliente{flex:1}
-.meta-field.cliente input{width:100%;min-width:160px}
+.meta-field.cliente input{width:100%;min-width:150px}
+.meta-actions{display:flex;gap:8px;margin-left:auto}
+.btn-meta{
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  padding:8px 13px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:600;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--text);transition:.15s;box-shadow:var(--shadow-sm);
+}
+.btn-meta:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.btn-meta svg{width:15px;height:15px}
+.btn-meta.save{background:var(--grad-btn);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(30,111,217,.28)}
+.btn-meta.save:hover{color:#fff;box-shadow:0 5px 14px rgba(30,111,217,.4)}
+.btn-meta .badge-count{background:var(--orange);color:#fff;border-radius:20px;padding:1px 6px;font-size:10.5px;font-weight:700;margin-left:2px}
+
+/* ===== MODAL OTs ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(14,22,38,.55);backdrop-filter:blur(3px);
+}
+.modal-overlay.hidden{display:none}
+.modal-card{
+  width:100%;max-width:640px;max-height:82vh;background:#fff;border-radius:16px;
+  box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;animation:loginIn .25s ease;
+}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:18px;display:flex;align-items:center;gap:10px}
+.modal-head h3 svg{width:20px;height:20px;color:var(--orange)}
+.modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface-alt);color:var(--text-secondary);font-size:16px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+.modal-close:hover{background:var(--danger-light);color:var(--danger)}
+.modal-body{padding:14px 18px;overflow-y:auto}
+.jobs-empty{text-align:center;color:var(--text-secondary);padding:46px 20px;font-size:14px}
+.job-row{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:10px;transition:.15s;background:var(--surface);
+}
+.job-row:hover{border-color:var(--blue);box-shadow:var(--shadow-sm)}
+.job-icon{width:42px;height:42px;border-radius:10px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.job-icon svg{width:22px;height:22px}
+.job-info{flex:1;min-width:0}
+.job-ot{font-weight:700;font-size:15px;color:var(--text)}
+.job-meta{font-size:13px;color:var(--text);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-sub{font-size:11.5px;color:var(--text-secondary);margin-top:3px}
+.job-actions{display:flex;gap:8px;flex-shrink:0}
+.btn-job-load{padding:8px 16px;border-radius:8px;background:var(--grad-btn);color:#fff;font-weight:600;font-size:13px;box-shadow:var(--shadow-sm);transition:.15s}
+.btn-job-load:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn-job-del{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);border:1px solid var(--border);color:var(--text-secondary);transition:.15s;display:inline-flex;align-items:center;justify-content:center}
+.btn-job-del:hover{background:var(--danger-light);color:var(--danger);border-color:#f3c2bc}
+.btn-job-del svg{width:16px;height:16px}
 
 /* ===== TABS ===== */
 .tabbar{
@@ -522,6 +568,16 @@ input{font-family:inherit}
   <div class="meta-field ot"><label>N° OT</label><input id="meta-ot" type="text" placeholder="—" spellcheck="false"></div>
   <div class="meta-field oc"><label>N° OC</label><input id="meta-oc" type="text" placeholder="—" spellcheck="false"></div>
   <div class="meta-field cliente"><label>Cliente</label><input id="meta-cliente" type="text" placeholder="Nombre del cliente" spellcheck="false"></div>
+  <div class="meta-actions">
+    <button class="btn-meta save" onclick="OptiCorte.saveJob()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Guardar OT
+    </button>
+    <button class="btn-meta" onclick="OptiCorte.openJobs()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      OTs guardadas <span class="badge-count" id="jobs-count">0</span>
+    </button>
+  </div>
 </div>
 
 <div id="print-header"
@@ -633,6 +689,19 @@ input{font-family:inherit}
     </div></div>
   </section>
 </main>
+
+<div id="jobs-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        OTs guardadas
+      </h3>
+      <button class="modal-close" onclick="OptiCorte.closeJobs()">✕</button>
+    </div>
+    <div class="modal-body" id="jobs-list"></div>
+  </div>
+</div>
 
 </div><!-- /app-shell -->
 
@@ -1230,6 +1299,83 @@ async function exportPDF(){
   toast('PDF exportado','ok');
 }
 
+/* ===================== OTs GUARDADAS (localStorage) ===================== */
+const JOBS_KEY='opticorte_jobs';
+function getJobs(){ try{ return JSON.parse(localStorage.getItem(JOBS_KEY)||'[]'); }catch(_){ return []; } }
+function setJobs(j){ try{ localStorage.setItem(JOBS_KEY, JSON.stringify(j)); return true; }catch(_){ toast('No se pudo guardar (almacenamiento lleno)','err'); return false; } }
+function updateJobsCount(){ const el=$('jobs-count'); if(el) el.textContent=getJobs().length; }
+
+function saveJob(){
+  const ot=$('meta-ot').value.trim();
+  if(!ot){ toast('Ingresá un N° OT para guardar','err'); $('meta-ot').focus(); return; }
+  const job={
+    id: ot.toLowerCase(),
+    savedAt: Date.now(),
+    project:$('projectName').value, ot, oc:$('meta-oc').value.trim(), cliente:$('meta-cliente').value.trim(),
+    chapas:{ largo:$('ch-largo').value, ancho:$('ch-ancho').value, espesor:$('ch-espesor').value, gap:$('ch-gap').value, margen:$('ch-margen').value, piezas:state.chapas.piezas.map(p=>({...p})) },
+    canos:{ largo:$('ca-largo').value, sangria:$('ca-sangria').value, reuse:$('ca-reuse').value, desc:$('ca-desc').value, cortes:state.canos.cortes.map(c=>({...c})) }
+  };
+  const jobs=getJobs();
+  const idx=jobs.findIndex(x=>x.id===job.id);
+  const overwrite=idx>=0;
+  if(overwrite) jobs[idx]=job; else jobs.unshift(job);
+  if(setJobs(jobs)){ updateJobsCount(); toast(overwrite?('OT '+ot+' actualizada'):('OT '+ot+' guardada'),'ok'); }
+}
+
+function openJobs(){ renderJobsList(); $('jobs-modal').classList.remove('hidden'); }
+function closeJobs(){ $('jobs-modal').classList.add('hidden'); }
+
+function renderJobsList(){
+  const jobs=getJobs().sort((a,b)=>b.savedAt-a.savedAt);
+  const cont=$('jobs-list');
+  if(!jobs.length){ cont.innerHTML='<div class="jobs-empty">📁 No hay OTs guardadas todavía.<br>Completá los datos del trabajo y presioná <strong>Guardar OT</strong>.</div>'; return; }
+  cont.innerHTML = jobs.map(j=>{
+    const d=new Date(j.savedAt).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const np=(j.chapas&&j.chapas.piezas?j.chapas.piezas.length:0), nc=(j.canos&&j.canos.cortes?j.canos.cortes.length:0);
+    return `<div class="job-row">
+      <div class="job-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+      <div class="job-info">
+        <div class="job-ot">OT ${esc(j.ot)}</div>
+        <div class="job-meta">${esc(j.cliente||'Sin cliente')} · ${esc(j.project||'—')}</div>
+        <div class="job-sub">${np} pieza(s) · ${nc} corte(s) · guardado ${esc(d)}</div>
+      </div>
+      <div class="job-actions">
+        <button class="btn-job-load" data-id="${esc(j.id)}">Cargar</button>
+        <button class="btn-job-del" data-id="${esc(j.id)}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+  cont.querySelectorAll('.btn-job-load').forEach(b=>b.onclick=()=>loadJob(b.dataset.id));
+  cont.querySelectorAll('.btn-job-del').forEach(b=>b.onclick=()=>deleteJob(b.dataset.id));
+}
+
+function loadJob(id){
+  const j=getJobs().find(x=>x.id===id); if(!j){ toast('OT no encontrada','err'); return; }
+  $('projectName').value=j.project||'';
+  $('meta-ot').value=j.ot||''; $('meta-oc').value=j.oc||''; $('meta-cliente').value=j.cliente||'';
+  const ch=j.chapas||{}, ca=j.canos||{};
+  if(ch.largo!=null)$('ch-largo').value=ch.largo; if(ch.ancho!=null)$('ch-ancho').value=ch.ancho;
+  $('ch-espesor').value=ch.espesor||''; if(ch.gap!=null)$('ch-gap').value=ch.gap; if(ch.margen!=null)$('ch-margen').value=ch.margen;
+  state.chapas.piezas=(ch.piezas||[]).map(p=>({...p})); renderPiezas();
+  if(ca.largo!=null)$('ca-largo').value=ca.largo; if(ca.sangria!=null)$('ca-sangria').value=ca.sangria;
+  if(ca.reuse!=null)$('ca-reuse').value=ca.reuse; $('ca-desc').value=ca.desc||'';
+  state.canos.cortes=(ca.cortes||[]).map(c=>({...c})); renderCortes();
+  state.chapas.result=null; state.canos.result=null;
+  closeJobs();
+  // recalcular para mostrar resultados ya hechos
+  if(state.chapas.piezas.length) calcularChapas();
+  if(state.canos.cortes.length) calcularCanos();
+  toast('OT '+(j.ot||'')+' cargada','ok');
+}
+
+function deleteJob(id){
+  const j=getJobs().find(x=>x.id===id);
+  if(!confirm('¿Eliminar la OT '+(j?j.ot:'')+' guardada? Esta acción no se puede deshacer.')) return;
+  setJobs(getJobs().filter(x=>x.id!==id));
+  renderJobsList(); updateJobsCount();
+  toast('OT eliminada');
+}
+
 /* ===================== IMPRIMIR ===================== */
 function togglePrintMenu(){ $('print-dropdown').classList.toggle('show'); }
 function closePrintMenu(){ $('print-dropdown').classList.remove('show'); }
@@ -1333,6 +1479,10 @@ function init(){
   document.addEventListener('click', e=>{ if(!e.target.closest('.print-menu')) closePrintMenu(); });
   // limpiar modo de impresión al terminar
   window.addEventListener('afterprint', ()=>document.body.classList.remove('pm-all','pm-diagram','pm-route'));
+
+  // OTs guardadas
+  updateJobsCount();
+  $('jobs-modal').addEventListener('click', e=>{ if(e.target.id==='jobs-modal') closeJobs(); });
   // precarga piezas (2D)
   [{codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
    {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
@@ -1350,7 +1500,8 @@ init();
 
 return { switchTab, dirty, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
          calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
-         login, logout, print, togglePrintMenu };
+         login, logout, print, togglePrintMenu,
+         saveJob, openJobs, closeJobs, loadJob, deleteJob };
 })();
 </script>
 </body>
