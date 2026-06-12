@@ -165,6 +165,34 @@ input{font-family:inherit}
 .btn-job-del:hover{background:var(--danger-light);color:var(--danger);border-color:#f3c2bc}
 .btn-job-del svg{width:16px;height:16px}
 
+/* ===== SELECTOR DE MATERIALES ===== */
+.mat-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mat-chip{
+  display:inline-flex;align-items:center;gap:6px;max-width:210px;
+  padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  font-size:12.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:.15s;box-shadow:var(--shadow-sm);
+}
+.mat-chip:hover{border-color:var(--blue);color:var(--blue)}
+.mat-chip.active{background:var(--grad-btn);color:#fff;border-color:transparent}
+.mat-chip.orange:hover{border-color:var(--orange);color:var(--orange)}
+.mat-chip.orange.active{background:var(--grad-orange);color:#fff;border-color:transparent}
+.mat-chip .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mat-chip .x{font-size:12px;width:16px;height:16px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;opacity:.65;flex-shrink:0}
+.mat-chip .x:hover{background:rgba(255,255,255,.28);opacity:1}
+.mat-chip:not(.active) .x:hover{background:var(--danger-light);color:var(--danger)}
+.mat-add{
+  padding:7px 11px;border-radius:8px;border:1.5px dashed var(--border-strong);background:var(--surface);
+  color:var(--blue);font-weight:600;font-size:12.5px;cursor:pointer;transition:.15s;
+}
+.mat-add:hover{border-color:var(--blue);background:var(--blue-light)}
+
+/* secciones de resultado por material */
+.mat-section{display:flex;flex-direction:column;gap:16px}
+.mat-section + .mat-section{margin-top:6px;padding-top:18px;border-top:2px dashed var(--border)}
+.mat-sec-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px}
+.mat-sec-title .dot{width:9px;height:9px;border-radius:50%;background:var(--grad-btn);flex-shrink:0}
+.mat-sec-title .dot.orange{background:var(--grad-orange)}
+
 /* ===== TABS ===== */
 .tabbar{
   display:flex;gap:6px;padding:16px 24px 0;
@@ -427,7 +455,7 @@ input{font-family:inherit}
   .tbl-result tbody tr:hover{ background:inherit !important; }
   .seq-chip{ break-inside:avoid }
   /* modos */
-  body.pm-diagram .print-route, body.pm-diagram .kpi-row{ display:none !important; }
+  body.pm-diagram .print-route, body.pm-diagram .kpi-row, body.pm-diagram .print-summary{ display:none !important; }
   body.pm-route .print-diagram, body.pm-route .kpi-row{ display:none !important; }
 }
 
@@ -611,17 +639,18 @@ input{font-family:inherit}
 <!-- ============ TAB CHAPAS ============ -->
 <main class="workspace active" id="ws-chapas">
   <aside class="panel-left">
+    <div class="mat-tabs" id="ch-mats"></div>
     <div class="card">
       <div class="card-head"><span class="dot"></span><h3>Chapa Matriz</h3></div>
       <div class="card-body">
         <div class="field"><div class="row2">
-          <div style="flex:1"><label>Largo (mm)</label><input class="input" type="number" id="ch-largo" value="3000" oninput="OptiCorte.dirty('chapas')"></div>
-          <div style="flex:1"><label>Ancho (mm)</label><input class="input" type="number" id="ch-ancho" value="1500" oninput="OptiCorte.dirty('chapas')"></div>
+          <div style="flex:1"><label>Largo (mm)</label><input class="input" type="number" id="ch-largo" value="3000" oninput="OptiCorte.chField('largo',this.value)"></div>
+          <div style="flex:1"><label>Ancho (mm)</label><input class="input" type="number" id="ch-ancho" value="1500" oninput="OptiCorte.chField('ancho',this.value)"></div>
         </div></div>
-        <div class="field"><label>Espesor / Material</label><input class="input" type="text" id="ch-espesor" value="2 mm DD C.16" oninput="OptiCorte.dirty('chapas')"></div>
+        <div class="field"><label>Espesor / Material</label><input class="input" type="text" id="ch-espesor" value="2 mm DD C.16" oninput="OptiCorte.chField('espesor',this.value)"></div>
         <div class="field"><div class="row2">
-          <div style="flex:1"><label>GAP piezas (mm)</label><input class="input" type="number" id="ch-gap" value="5" oninput="OptiCorte.dirty('chapas')"></div>
-          <div style="flex:1"><label>Margen borde (mm)</label><input class="input" type="number" id="ch-margen" value="10" oninput="OptiCorte.dirty('chapas')"></div>
+          <div style="flex:1"><label>GAP piezas (mm)</label><input class="input" type="number" id="ch-gap" value="5" oninput="OptiCorte.chField('gap',this.value)"></div>
+          <div style="flex:1"><label>Margen borde (mm)</label><input class="input" type="number" id="ch-margen" value="10" oninput="OptiCorte.chField('margen',this.value)"></div>
         </div></div>
       </div>
     </div>
@@ -655,15 +684,16 @@ input{font-family:inherit}
 <!-- ============ TAB CAÑOS ============ -->
 <main class="workspace" id="ws-canos">
   <aside class="panel-left">
+    <div class="mat-tabs" id="ca-mats"></div>
     <div class="card">
       <div class="card-head"><span class="dot orange"></span><h3>Barra Comercial</h3></div>
       <div class="card-body">
-        <div class="field"><label>Largo comercial (mm)</label><input class="input" type="number" id="ca-largo" value="6000" oninput="OptiCorte.dirty('canos')"></div>
+        <div class="field"><label>Largo comercial (mm)</label><input class="input" type="number" id="ca-largo" value="6000" oninput="OptiCorte.caField('largo',this.value)"></div>
         <div class="field"><div class="row2">
-          <div style="flex:1"><label>Sangría / disco (mm)</label><input class="input" type="number" id="ca-sangria" value="3" oninput="OptiCorte.dirty('canos')"></div>
-          <div style="flex:1"><label>Sobrante útil mín. (mm)</label><input class="input" type="number" id="ca-reuse" value="200" oninput="OptiCorte.dirty('canos')"></div>
+          <div style="flex:1"><label>Sangría / disco (mm)</label><input class="input" type="number" id="ca-sangria" value="3" oninput="OptiCorte.caField('sangria',this.value)"></div>
+          <div style="flex:1"><label>Sobrante útil mín. (mm)</label><input class="input" type="number" id="ca-reuse" value="200" oninput="OptiCorte.caField('reuse',this.value)"></div>
         </div></div>
-        <div class="field"><label>Descripción del perfil</label><input class="input" type="text" id="ca-desc" value="Caño 40×40×2 St52" oninput="OptiCorte.dirty('canos')"></div>
+        <div class="field"><label>Descripción del perfil</label><input class="input" type="text" id="ca-desc" value="Caño 40×40×2 St52" oninput="OptiCorte.caField('desc',this.value)"></div>
       </div>
     </div>
 
@@ -715,9 +745,16 @@ const PALETTE = ['#1E6FD9','#F58220','#2ECC71','#9B59B6','#16A085','#E84393','#F
 
 const state = {
   activeTab:'chapas',
-  chapas:{ piezas:[], result:null, currentSheet:0 },
-  canos:{ cortes:[], result:null }
+  chapas:{ mats:[], active:0 },
+  canos:{ mats:[], active:0 }
 };
+let chSeq=0, caSeq=0;
+function newChMat(o){ return Object.assign({ id:'chm'+(++chSeq), largo:3000, ancho:1500, espesor:'', gap:5, margen:10, piezas:[], result:null, cur:0 }, o||{}); }
+function newCaMat(o){ return Object.assign({ id:'cam'+(++caSeq), largo:6000, sangria:3, reuse:200, desc:'', cortes:[], result:null }, o||{}); }
+function chM(){ return state.chapas.mats[state.chapas.active]; }
+function caM(){ return state.canos.mats[state.canos.active]; }
+function chLabel(m,i){ return (m.espesor&&String(m.espesor).trim())||('Chapa '+(i+1)); }
+function caLabel(m,i){ return (m.desc&&String(m.desc).trim())||('Perfil '+(i+1)); }
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -743,21 +780,49 @@ function switchTab(tab){
   $('ws-'+tab).classList.add('active');
 }
 
-function dirty(which){
-  // limpiar resultados previos al editar inputs (no recalcula automático)
-  if(which==='chapas' && state.chapas.result){ state.chapas.result=null; renderChapasEmpty(); }
-  if(which==='canos' && state.canos.result){ state.canos.result=null; renderCanosEmpty(); }
+/* ===================== SELECTOR DE MATERIALES ===================== */
+function renderChMats(){
+  const cont=$('ch-mats'); if(!cont) return;
+  cont.innerHTML = state.chapas.mats.map((m,i)=>{
+    const act=i===state.chapas.active;
+    const x = state.chapas.mats.length>1? `<span class="x" data-rm="${i}" title="Quitar material">✕</span>`:'';
+    return `<button class="mat-chip${act?' active':''}" data-sel="${i}"><span class="lbl">${esc(chLabel(m,i))}</span>${x}</button>`;
+  }).join('') + `<button class="mat-add" id="ch-mat-add">+ Material</button>`;
+  cont.querySelectorAll('[data-sel]').forEach(b=>b.onclick=e=>{ if(e.target.dataset.rm!=null) return; selectChMat(+b.dataset.sel); });
+  cont.querySelectorAll('[data-rm]').forEach(s=>s.onclick=e=>{ e.stopPropagation(); removeChMat(+s.dataset.rm); });
+  $('ch-mat-add').onclick=addChMat;
 }
+function loadChInputs(){ const m=chM(); $('ch-largo').value=m.largo; $('ch-ancho').value=m.ancho; $('ch-espesor').value=m.espesor; $('ch-gap').value=m.gap; $('ch-margen').value=m.margen; }
+function selectChMat(i){ state.chapas.active=i; loadChInputs(); renderPiezas(); renderChMats(); }
+function addChMat(){ state.chapas.mats.push(newChMat()); state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); }
+function removeChMat(i){ const m=state.chapas.mats[i]; if((m.piezas&&m.piezas.length) && !confirm('¿Quitar el material "'+chLabel(m,i)+'" y sus piezas?')) return; state.chapas.mats.splice(i,1); if(state.chapas.active>=state.chapas.mats.length) state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult(); }
+function chField(f,v){ chM()[f]=v; chM().result=null; if(f==='espesor') renderChMats(); renderChapasResult(); }
+function selChMat(i){ selectChMat(i); }
+
+function renderCaMats(){
+  const cont=$('ca-mats'); if(!cont) return;
+  cont.innerHTML = state.canos.mats.map((m,i)=>{
+    const act=i===state.canos.active;
+    const x = state.canos.mats.length>1? `<span class="x" data-rm="${i}" title="Quitar perfil">✕</span>`:'';
+    return `<button class="mat-chip orange${act?' active':''}" data-sel="${i}"><span class="lbl">${esc(caLabel(m,i))}</span>${x}</button>`;
+  }).join('') + `<button class="mat-add" id="ca-mat-add">+ Perfil</button>`;
+  cont.querySelectorAll('[data-sel]').forEach(b=>b.onclick=e=>{ if(e.target.dataset.rm!=null) return; selectCaMat(+b.dataset.sel); });
+  cont.querySelectorAll('[data-rm]').forEach(s=>s.onclick=e=>{ e.stopPropagation(); removeCaMat(+s.dataset.rm); });
+  $('ca-mat-add').onclick=addCaMat;
+}
+function loadCaInputs(){ const m=caM(); $('ca-largo').value=m.largo; $('ca-sangria').value=m.sangria; $('ca-reuse').value=m.reuse; $('ca-desc').value=m.desc; }
+function selectCaMat(i){ state.canos.active=i; loadCaInputs(); renderCortes(); renderCaMats(); }
+function addCaMat(){ state.canos.mats.push(newCaMat()); state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); }
+function removeCaMat(i){ const m=state.canos.mats[i]; if((m.cortes&&m.cortes.length) && !confirm('¿Quitar el perfil "'+caLabel(m,i)+'" y sus cortes?')) return; state.canos.mats.splice(i,1); if(state.canos.active>=state.canos.mats.length) state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult(); }
+function caField(f,v){ caM()[f]=v; caM().result=null; if(f==='desc') renderCaMats(); renderCanosResult(); }
+function selCaMat(i){ selectCaMat(i); }
 
 /* ===================== PIEZAS (2D) tabla ===================== */
-function addPieza(p){
-  state.chapas.piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true});
-  renderPiezas(); dirty('chapas');
-}
-function delPieza(i){ state.chapas.piezas.splice(i,1); renderPiezas(); dirty('chapas'); }
+function addPieza(p){ chM().piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true}); renderPiezas(); chM().result=null; renderChapasResult(); }
+function delPieza(i){ chM().piezas.splice(i,1); renderPiezas(); chM().result=null; renderChapasResult(); }
 function renderPiezas(){
   const tb=$('piezas-body'); tb.innerHTML='';
-  state.chapas.piezas.forEach((p,i)=>{
+  chM().piezas.forEach((p,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td><input type="text" value="${esc(p.codigo)}" oninput="OptiCorte.editPieza(${i},'codigo',this.value)"></td>
@@ -769,17 +834,14 @@ function renderPiezas(){
     tb.appendChild(tr);
   });
 }
-function editPieza(i,f,v){ state.chapas.piezas[i][f]= (f==='rot')?v:v; dirty('chapas'); }
+function editPieza(i,f,v){ chM().piezas[i][f]=v; chM().result=null; renderChapasResult(); }
 
 /* ===================== CORTES (1D) tabla ===================== */
-function addCorte(c){
-  state.canos.cortes.push(c||{codigo:'',largo:'',cant:1});
-  renderCortes(); dirty('canos');
-}
-function delCorte(i){ state.canos.cortes.splice(i,1); renderCortes(); dirty('canos'); }
+function addCorte(c){ caM().cortes.push(c||{codigo:'',largo:'',cant:1}); renderCortes(); caM().result=null; renderCanosResult(); }
+function delCorte(i){ caM().cortes.splice(i,1); renderCortes(); caM().result=null; renderCanosResult(); }
 function renderCortes(){
   const tb=$('cortes-body'); tb.innerHTML='';
-  state.canos.cortes.forEach((c,i)=>{
+  caM().cortes.forEach((c,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td><input type="text" value="${esc(c.codigo)}" oninput="OptiCorte.editCorte(${i},'codigo',this.value)"></td>
@@ -789,7 +851,7 @@ function renderCortes(){
     tb.appendChild(tr);
   });
 }
-function editCorte(i,f,v){ state.canos.cortes[i][f]=v; dirty('canos'); }
+function editCorte(i,f,v){ caM().cortes[i][f]=v; caM().result=null; renderCanosResult(); }
 
 /* ===================== ALGORITMO 2D — MaxRects (BSSF) ===================== */
 function rectsIntersect(a,b){
@@ -824,15 +886,12 @@ function splitFree(free, used){
   return result;
 }
 
-function calcularChapas(){
-  const L=num('ch-largo',3000), W=num('ch-ancho',1500);
-  const gap=num('ch-gap',5), margen=num('ch-margen',10);
-  const esp=$('ch-espesor').value.trim();
-
-  // validación
-  if(L<=0||W<=0){ toast('Dimensiones de chapa inválidas','err'); return; }
-  const piezas=state.chapas.piezas.filter(p=>parseFloat(p.largo)>0 && parseFloat(p.ancho)>0 && parseInt(p.cant)>0);
-  if(!piezas.length){ toast('Agregá al menos una pieza válida','err'); return; }
+function computeChapa(mat){
+  const L=parseFloat(mat.largo)||0, W=parseFloat(mat.ancho)||0;
+  const gap=parseFloat(mat.gap)||0, margen=parseFloat(mat.margen)||0, esp=(mat.espesor||'').trim();
+  if(L<=0||W<=0) return null;
+  const piezas=mat.piezas.filter(p=>parseFloat(p.largo)>0 && parseFloat(p.ancho)>0 && parseInt(p.cant)>0);
+  if(!piezas.length) return null;
 
   const usableW=L-2*margen, usableH=W-2*margen;
 
@@ -903,80 +962,101 @@ function calcularChapas(){
   });
   const avgUtil = sheets.length? totalPlacedArea/(sheets.length*sheetArea)*100 : 0;
 
-  state.chapas.result={ L,W,esp,gap,margen,usableW,usableH,sheets,colorMap,
+  return { L,W,esp,gap,margen,usableW,usableH,sheets,colorMap,
     kpi:{ nSheets:sheets.length, avgUtil, waste:100-avgUtil, placed:totalPlaced, req:totalReq },
     noFit };
-  state.chapas.currentSheet=0;
+}
+
+function calcularChapas(){
+  let computed=0, totalSheets=0;
+  state.chapas.mats.forEach(m=>{ const r=computeChapa(m); m.result=r; m.cur=0; if(r){ computed++; totalSheets+=r.kpi.nSheets; } });
   renderChapasResult();
-  toast('Optimización completada — '+sheets.length+' chapa(s)','ok');
+  if(!computed){ toast('Agregá piezas válidas a algún material de chapa','err'); return; }
+  toast(`Optimización: ${computed} material(es) · ${totalSheets} chapa(s)`,'ok');
 }
 
 /* ===================== RENDER 2D ===================== */
 function renderChapasEmpty(){
   $('chapas-results').innerHTML=`<div class="card"><div class="empty-state">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 10h18M9 5v14"/></svg>
-    <h3>Sin resultados aún</h3><p>Editaste los datos. Presioná <strong>Calcular Optimización</strong> nuevamente.</p></div></div>`;
+    <h3>Sin resultados aún</h3><p>Configurá los materiales y sus piezas, luego presioná <strong>Calcular Optimización</strong>.</p></div></div>`;
 }
 function renderChapasResult(){
-  const r=state.chapas.result; if(!r) return renderChapasEmpty();
-  const k=r.kpi;
-  let html=`
-  <div class="kpi-row">
-    <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub">${esc(r.esp||'—')}</div></div>
-    <div class="kpi k-green"><div class="k-label">Aprovechamiento prom.</div><div class="k-value">${fmt(k.avgUtil)}%</div><div class="k-sub">${r.L}×${r.W} mm</div></div>
-    <div class="kpi k-red"><div class="k-label">Material desperdiciado</div><div class="k-value">${fmt(k.waste)}%</div><div class="k-sub">incluye gap y márgenes</div></div>
-    <div class="kpi k-orange"><div class="k-label">Piezas ubicadas</div><div class="k-value">${k.placed}<span style="font-size:18px;color:var(--text-secondary)">/${k.req}</span></div><div class="k-sub">${k.placed<k.req?'⚠ faltan ubicar':'✓ todas ubicadas'}</div></div>
-  </div>`;
+  const mats=state.chapas.mats;
+  if(!mats.some(m=>m.result)) return renderChapasEmpty();
+  let html='';
 
-  if(r.noFit && r.noFit.length){
-    html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
-      <h4>⚠ Piezas no ubicadas</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.w}×${n.h} mm (×${n.cant}) — no entra en la chapa matriz bajo ninguna orientación.</li>`).join('')}</ul>
-    </div></div></div>`;
+  if(mats.length>1){
+    html+=`<div class="card print-summary"><div class="card-head"><span class="dot"></span><h3>Resumen — Chapas del proyecto</h3></div>
+      <table class="tbl-result"><thead><tr><th>Material</th><th>Chapas</th><th>Aprovech.</th><th>Piezas</th></tr></thead><tbody>`;
+    mats.forEach((m,i)=>{
+      if(m.result){ const k=m.result.kpi;
+        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><strong>${esc(chLabel(m,i))}</strong> <span class="muted">${m.result.L}×${m.result.W}</span></td><td>${k.nSheets}</td><td>${fmt(k.avgUtil)}%</td><td>${k.placed}/${k.req}</td></tr>`;
+      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selChMat(${i})"><td><strong>${esc(chLabel(m,i))}</strong></td><td colspan="3" class="muted">— pendiente de calcular —</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
   }
 
-  // viz
-  html+=`<div class="card print-diagram">
-    <div class="viz-head"><h3>Visualización de Nesting</h3>
-      <div class="nav-sheets">
-        <button class="nav-btn" id="ch-prev" onclick="OptiCorte.navSheet(-1)">‹</button>
-        <span class="nav-label" id="ch-navlabel"></span>
-        <button class="nav-btn" id="ch-next" onclick="OptiCorte.navSheet(1)">›</button>
-      </div>
-    </div>
-    <div class="viz-canvas" id="ch-svg"></div>
-    <div id="ch-print" class="print-only" style="padding:10px"></div>
-  </div>`;
+  mats.forEach((m,i)=>{
+    if(!m.result) return;
+    const r=m.result, k=r.kpi, multi=mats.length>1;
+    html+=`<div class="mat-section">`;
+    if(multi) html+=`<div class="mat-sec-title"><span class="dot"></span>${esc(chLabel(m,i))} <span class="muted">· ${r.L}×${r.W} mm${r.esp?(' · '+esc(r.esp)):''}</span></div>`;
+    html+=`<div class="kpi-row">
+      <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub">${esc(r.esp||'—')}</div></div>
+      <div class="kpi k-green"><div class="k-label">Aprovechamiento prom.</div><div class="k-value">${fmt(k.avgUtil)}%</div><div class="k-sub">${r.L}×${r.W} mm</div></div>
+      <div class="kpi k-red"><div class="k-label">Material desperdiciado</div><div class="k-value">${fmt(k.waste)}%</div><div class="k-sub">incluye gap y márgenes</div></div>
+      <div class="kpi k-orange"><div class="k-label">Piezas ubicadas</div><div class="k-value">${k.placed}<span style="font-size:18px;color:var(--text-secondary)">/${k.req}</span></div><div class="k-sub">${k.placed<k.req?'⚠ faltan ubicar':'✓ todas ubicadas'}</div></div>
+    </div>`;
 
-  // tabla detalle
-  html+=`<div class="card print-route">
-    <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa</h3></div>
-    <table class="tbl-result"><thead><tr><th>Chapa N°</th><th>Pieza / Código</th><th>Dimensiones</th><th>Cant. en chapa</th></tr></thead><tbody>`;
-  r.sheets.forEach((s,si)=>{
-    const agg={};
-    s.placed.forEach(p=>{ const key=p.code+'|'+p.w+'x'+p.h; agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0,rot:p.rot}; agg[key].n++; });
-    Object.values(agg).forEach((a,idx)=>{
-      html+=`<tr><td>${idx===0?'<strong>#'+(si+1)+'</strong>':''}</td>
-        <td><span class="swatch" style="background:${r.colorMap[a.code]}"></span>${esc(a.code)}</td>
-        <td>${a.w}×${a.h} mm</td><td>${a.n}</td></tr>`;
-    });
-    if(s.retazo && s.retazo.w>20 && s.retazo.h>20){
-      html+=`<tr class="retazo-row"><td></td><td colspan="3">Retazo útil: ${Math.round(s.retazo.w)} × ${Math.round(s.retazo.h)} mm — Guardar en stock</td></tr>`;
+    if(r.noFit && r.noFit.length){
+      html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
+        <h4>⚠ Piezas no ubicadas${multi?(' — '+esc(chLabel(m,i))):''}</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.w}×${n.h} mm (×${n.cant}) — no entra en esta chapa bajo ninguna orientación.</li>`).join('')}</ul>
+      </div></div></div>`;
     }
+
+    html+=`<div class="card print-diagram">
+      <div class="viz-head"><h3>Nesting${multi?(' · '+esc(chLabel(m,i))):''}</h3>
+        <div class="nav-sheets">
+          <button class="nav-btn" id="prev-${m.id}" onclick="OptiCorte.navSheet('${m.id}',-1)">‹</button>
+          <span class="nav-label" id="lbl-${m.id}"></span>
+          <button class="nav-btn" id="next-${m.id}" onclick="OptiCorte.navSheet('${m.id}',1)">›</button>
+        </div>
+      </div>
+      <div class="viz-canvas" id="svg-${m.id}"></div>
+      <div id="print-${m.id}" class="print-only" style="padding:10px"></div>
+    </div>`;
+
+    html+=`<div class="card print-route">
+      <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa${multi?(' · '+esc(chLabel(m,i))):''}</h3></div>
+      <table class="tbl-result"><thead><tr><th>Chapa N°</th><th>Pieza / Código</th><th>Dimensiones</th><th>Cant. en chapa</th></tr></thead><tbody>`;
+    r.sheets.forEach((s,si)=>{
+      const agg={};
+      s.placed.forEach(p=>{ const key=p.code+'|'+p.w+'x'+p.h; agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0}; agg[key].n++; });
+      Object.values(agg).forEach((a,idx)=>{
+        html+=`<tr><td>${idx===0?'<strong>#'+(si+1)+'</strong>':''}</td>
+          <td><span class="swatch" style="background:${r.colorMap[a.code]}"></span>${esc(a.code)}</td>
+          <td>${a.w}×${a.h} mm</td><td>${a.n}</td></tr>`;
+      });
+      if(s.retazo && s.retazo.w>20 && s.retazo.h>20){
+        html+=`<tr class="retazo-row"><td></td><td colspan="3">Retazo útil: ${Math.round(s.retazo.w)} × ${Math.round(s.retazo.h)} mm — Guardar en stock</td></tr>`;
+      }
+    });
+    html+=`</tbody></table></div></div>`;
   });
-  html+=`</tbody></table></div>`;
 
   $('chapas-results').innerHTML=html;
-  drawSheet(state.chapas.currentSheet);
+  mats.forEach(m=>{ if(m.result) drawSheet(m); });
 }
 
-function navSheet(d){
-  const r=state.chapas.result; if(!r)return;
-  state.chapas.currentSheet=Math.max(0,Math.min(r.sheets.length-1,state.chapas.currentSheet+d));
-  drawSheet(state.chapas.currentSheet);
+function navSheet(matId,d){
+  const m=state.chapas.mats.find(x=>x.id===matId); if(!m||!m.result)return;
+  m.cur=Math.max(0,Math.min(m.result.sheets.length-1,(m.cur||0)+d));
+  drawSheet(m);
 }
 
-function buildSheetSVG(idx){
-  const r=state.chapas.result; const s=r.sheets[idx];
+function buildSheetSVG(r,idx){
+  const s=r.sheets[idx];
   const maxW=720, scale=maxW/r.L, h=r.W*scale;
   const ns='http://www.w3.org/2000/svg';
   let svg=`<svg viewBox="0 0 ${maxW} ${h}" xmlns="${ns}" font-family="Inter,sans-serif">`;
@@ -1004,21 +1084,20 @@ function buildSheetSVG(idx){
   svg+=`</svg>`;
   return svg;
 }
-function drawSheet(idx){
-  const r=state.chapas.result; if(!r)return;
-  $('ch-svg').innerHTML=buildSheetSVG(idx);
-  $('ch-navlabel').textContent=`Chapa ${idx+1} / ${r.sheets.length}`;
-  $('ch-prev').disabled=idx<=0;
-  $('ch-next').disabled=idx>=r.sheets.length-1;
+function drawSheet(m){
+  const r=m.result; if(!r)return; const idx=m.cur||0;
+  const el=$('svg-'+m.id); if(el) el.innerHTML=buildSheetSVG(r,idx);
+  const lbl=$('lbl-'+m.id); if(lbl) lbl.textContent=`Chapa ${idx+1} / ${r.sheets.length}`;
+  const pv=$('prev-'+m.id), nx=$('next-'+m.id);
+  if(pv) pv.disabled=idx<=0; if(nx) nx.disabled=idx>=r.sheets.length-1;
 }
 
 /* ===================== ALGORITMO 1D — FFD ===================== */
-function calcularCanos(){
-  const barL=num('ca-largo',6000), kerf=num('ca-sangria',3), reuse=num('ca-reuse',200);
-  const desc=$('ca-desc').value.trim();
-  if(barL<=0){ toast('Largo de barra inválido','err'); return; }
-  const cortes=state.canos.cortes.filter(c=>parseFloat(c.largo)>0 && parseInt(c.cant)>0);
-  if(!cortes.length){ toast('Agregá al menos un corte válido','err'); return; }
+function computeCano(mat){
+  const barL=parseFloat(mat.largo)||0, kerf=parseFloat(mat.sangria)||0, reuse=parseFloat(mat.reuse)||0, desc=(mat.desc||'').trim();
+  if(barL<=0) return null;
+  const cortes=mat.cortes.filter(c=>parseFloat(c.largo)>0 && parseInt(c.cant)>0);
+  if(!cortes.length) return null;
 
   let pieces=[]; const noFit=[];
   cortes.forEach(c=>{
@@ -1061,10 +1140,16 @@ function calcularCanos(){
     b.sig=Object.keys(sig).sort().map(k=>k+'×'+sig[k]).join(' | ');
   });
 
-  state.canos.result={ barL,kerf,reuse,desc,bars,colorMap,
+  return { barL,kerf,reuse,desc,bars,colorMap,
     kpi:{ nBars:bars.length, util, desp:totalDesp, sobra:totalSobra }, noFit };
+}
+
+function calcularCanos(){
+  let computed=0, totalBars=0;
+  state.canos.mats.forEach(m=>{ const r=computeCano(m); m.result=r; if(r){ computed++; totalBars+=r.kpi.nBars; } });
   renderCanosResult();
-  toast('Optimización completada — '+bars.length+' barra(s)','ok');
+  if(!computed){ toast('Agregá cortes válidos a algún perfil','err'); return; }
+  toast(`Optimización: ${computed} perfil(es) · ${totalBars} barra(s)`,'ok');
 }
 
 /* ===================== RENDER 1D ===================== */
@@ -1074,53 +1159,66 @@ function renderCanosEmpty(){
     <h3>Sin resultados aún</h3><p>Editaste los datos. Presioná <strong>Calcular Optimización</strong> nuevamente.</p></div></div>`;
 }
 function renderCanosResult(){
-  const r=state.canos.result; if(!r) return renderCanosEmpty();
-  const k=r.kpi;
-  let html=`
-  <div class="kpi-row">
-    <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub">${esc(r.desc||'—')}</div></div>
-    <div class="kpi k-green"><div class="k-label">Aprovechamiento</div><div class="k-value">${fmt(k.util)}%</div><div class="k-sub">barra ${r.barL} mm</div></div>
-    <div class="kpi k-red"><div class="k-label">Desperdicio total</div><div class="k-value" style="font-size:24px">${fmt(k.desp)}<span style="font-size:14px"> mm</span></div><div class="k-sub">sangría + retazos &lt; ${r.reuse}mm</div></div>
-    <div class="kpi"><div class="k-label">Sobrante útil total</div><div class="k-value" style="font-size:24px">${fmt(k.sobra)}<span style="font-size:14px"> mm</span></div><div class="k-sub">reutilizable ≥ ${r.reuse}mm</div></div>
-  </div>`;
+  const mats=state.canos.mats;
+  if(!mats.some(m=>m.result)) return renderCanosEmpty();
+  let html='';
 
-  if(r.noFit && r.noFit.length){
-    html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
-      <h4>⚠ Cortes no ubicables</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.len} mm (×${n.cant}) — supera el largo comercial de la barra.</li>`).join('')}</ul>
-    </div></div></div>`;
+  if(mats.length>1){
+    html+=`<div class="card print-summary"><div class="card-head"><span class="dot orange"></span><h3>Resumen — Perfiles del proyecto</h3></div>
+      <table class="tbl-result"><thead><tr><th>Perfil</th><th>Barras</th><th>Aprov.</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
+    mats.forEach((m,i)=>{
+      if(m.result){ const k=m.result.kpi;
+        html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><strong>${esc(caLabel(m,i))}</strong> <span class="muted">${m.result.barL}mm</span></td><td>${k.nBars}</td><td>${fmt(k.util)}%</td><td>${fmt(k.desp)} mm</td><td>${fmt(k.sobra)} mm</td></tr>`;
+      } else html+=`<tr style="cursor:pointer" onclick="OptiCorte.selCaMat(${i})"><td><strong>${esc(caLabel(m,i))}</strong></td><td colspan="4" class="muted">— pendiente de calcular —</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
   }
 
-  // viz barras
-  html+=`<div class="card print-diagram"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte por Barra</h3></div>
-    <div class="card-body" id="ca-svg" style="display:flex;flex-direction:column;gap:14px"></div></div>`;
+  mats.forEach((m,mi)=>{
+    if(!m.result) return;
+    const r=m.result, k=r.kpi, multi=mats.length>1;
+    html+=`<div class="mat-section">`;
+    if(multi) html+=`<div class="mat-sec-title"><span class="dot orange"></span>${esc(caLabel(m,mi))} <span class="muted">· barra ${r.barL} mm</span></div>`;
+    html+=`<div class="kpi-row">
+      <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub">${esc(r.desc||'—')}</div></div>
+      <div class="kpi k-green"><div class="k-label">Aprovechamiento</div><div class="k-value">${fmt(k.util)}%</div><div class="k-sub">barra ${r.barL} mm</div></div>
+      <div class="kpi k-red"><div class="k-label">Desperdicio total</div><div class="k-value" style="font-size:24px">${fmt(k.desp)}<span style="font-size:14px"> mm</span></div><div class="k-sub">sangría + retazos &lt; ${r.reuse}mm</div></div>
+      <div class="kpi"><div class="k-label">Sobrante útil total</div><div class="k-value" style="font-size:24px">${fmt(k.sobra)}<span style="font-size:14px"> mm</span></div><div class="k-sub">reutilizable ≥ ${r.reuse}mm</div></div>
+    </div>`;
 
-  // hoja de ruta con agrupación de patrones
-  html+=`<div class="card print-route"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta</h3></div>
-    <table class="tbl-result"><thead><tr><th>Barra N°</th><th>Secuencia de cortes</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
-  let i=0;
-  while(i<r.bars.length){
-    let j=i;
-    while(j+1<r.bars.length && r.bars[j+1].sig===r.bars[i].sig) j++;
-    if(j>i){
-      html+=`<tr class="pattern-row"><td colspan="4">▦ Barras ${i+1} a ${j+1}: mismo patrón de corte (${j-i+1} barras)</td></tr>`;
+    if(r.noFit && r.noFit.length){
+      html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
+        <h4>⚠ Cortes no ubicables${multi?(' — '+esc(caLabel(m,mi))):''}</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.len} mm (×${n.cant}) — supera el largo comercial de la barra.</li>`).join('')}</ul>
+      </div></div></div>`;
     }
-    for(let b=i;b<=j;b++){
-      const bar=r.bars[b];
-      const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${esc(c.code)} · ${c.len}mm</span>`).join('');
-      html+=`<tr><td><strong>#${b+1}</strong></td><td>${chips}</td>
-        <td>${fmt(bar.desperdicio)} mm</td>
-        <td>${bar.sobrante>0?`<span style="color:var(--success);font-weight:600">${fmt(bar.sobrante)} mm</span>`:'<span class="muted">—</span>'}</td></tr>`;
+
+    html+=`<div class="card print-diagram"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte${multi?(' · '+esc(caLabel(m,mi))):''}</h3></div>
+      <div class="card-body" id="casvg-${m.id}" style="display:flex;flex-direction:column;gap:14px"></div></div>`;
+
+    html+=`<div class="card print-route"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta${multi?(' · '+esc(caLabel(m,mi))):''}</h3></div>
+      <table class="tbl-result"><thead><tr><th>Barra N°</th><th>Secuencia de cortes</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
+    let i=0;
+    while(i<r.bars.length){
+      let j=i;
+      while(j+1<r.bars.length && r.bars[j+1].sig===r.bars[i].sig) j++;
+      if(j>i) html+=`<tr class="pattern-row"><td colspan="4">▦ Barras ${i+1} a ${j+1}: mismo patrón de corte (${j-i+1} barras)</td></tr>`;
+      for(let b=i;b<=j;b++){
+        const bar=r.bars[b];
+        const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${esc(c.code)} · ${c.len}mm</span>`).join('');
+        html+=`<tr><td><strong>#${b+1}</strong></td><td>${chips}</td>
+          <td>${fmt(bar.desperdicio)} mm</td>
+          <td>${bar.sobrante>0?`<span style="color:var(--success);font-weight:600">${fmt(bar.sobrante)} mm</span>`:'<span class="muted">—</span>'}</td></tr>`;
+      }
+      i=j+1;
     }
-    i=j+1;
-  }
-  html+=`</tbody></table></div>`;
+    html+=`</tbody></table></div></div>`;
+  });
 
   $('canos-results').innerHTML=html;
-  $('ca-svg').innerHTML=r.bars.map((b,idx)=>buildBarSVG(b,idx)).join('');
+  mats.forEach(m=>{ if(m.result){ const el=$('casvg-'+m.id); if(el) el.innerHTML=m.result.bars.map((b,idx)=>buildBarSVG(m.result,b,idx)).join(''); } });
 }
 
-function buildBarSVG(bar,idx){
-  const r=state.canos.result;
+function buildBarSVG(r,bar,idx){
   const W=760, H=46, scale=W/r.barL;
   const ns='http://www.w3.org/2000/svg';
   let svg=`<div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Barra #${idx+1} — ${r.barL} mm</div>`;
@@ -1160,25 +1258,26 @@ function exportExcel(){
   const head=[['OptiCorte v1.0 — Optimización Industrial'],['Proyecto:',proj],['N° OT:',ot],['N° OC:',oc],['Cliente:',cliente],['Fecha:',fecha],[]];
 
   // Hoja Resumen
-  const resumen=[...head,['RESUMEN DE MATERIALES'],['Tipo','Dimensión / Descripción','Cantidad','Aprovechamiento %']];
-  const rc=state.chapas.result, rk=state.canos.result;
-  if(rc) resumen.push(['Chapa',`${rc.L}×${rc.W} mm — ${rc.esp}`,rc.kpi.nSheets,fmt(rc.kpi.avgUtil)+'%']);
-  if(rk) resumen.push(['Barra/Perfil',`${rk.barL} mm — ${rk.desc}`,rk.kpi.nBars,fmt(rk.kpi.util)+'%']);
-  if(!rc&&!rk) resumen.push(['—','Sin cálculos realizados','','']);
+  const chMats=state.chapas.mats.filter(m=>m.result), caMats=state.canos.mats.filter(m=>m.result);
+
+  const resumen=[...head,['RESUMEN DE MATERIALES'],['Tipo','Material','Dimensión','Cantidad','Aprovechamiento %']];
+  chMats.forEach((m,i)=>resumen.push(['Chapa',chLabel(m,state.chapas.mats.indexOf(m)),`${m.result.L}×${m.result.W} mm`,m.result.kpi.nSheets,fmt(m.result.kpi.avgUtil)+'%']));
+  caMats.forEach((m,i)=>resumen.push(['Perfil',caLabel(m,state.canos.mats.indexOf(m)),`${m.result.barL} mm`,m.result.kpi.nBars,fmt(m.result.kpi.util)+'%']));
+  if(!chMats.length&&!caMats.length) resumen.push(['—','Sin cálculos realizados','','','']);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen');
 
   // Hoja Chapas
-  const ch=[...head,['DETALLE DE CHAPAS'],['Chapa N°','Código Pieza','Largo','Ancho','Rotada','Pos X','Pos Y']];
-  if(rc){ rc.sheets.forEach((s,si)=>s.placed.forEach(p=>ch.push([si+1,p.code,p.w,p.h,p.rot?'Sí':'No',Math.round(p.x),Math.round(p.y)]))); }
-  else ch.push(['Sin datos','','','','','','']);
+  const ch=[...head,['DETALLE DE CHAPAS'],['Material','Chapa N°','Código Pieza','Largo','Ancho','Rotada','Pos X','Pos Y']];
+  if(chMats.length){ chMats.forEach(m=>{ const lbl=chLabel(m,state.chapas.mats.indexOf(m)); m.result.sheets.forEach((s,si)=>s.placed.forEach(p=>ch.push([lbl,si+1,p.code,p.w,p.h,p.rot?'Sí':'No',Math.round(p.x),Math.round(p.y)]))); }); }
+  else ch.push(['Sin datos','','','','','','','']);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ch), 'Chapas');
 
   // Hoja Caños
-  const ca=[...head,['HOJA DE RUTA — CAÑOS / PERFILES'],['Barra N°','Secuencia de cortes','Desperdicio (mm)','Sobrante útil (mm)']];
-  if(rk){ rk.bars.forEach((b,bi)=>{
+  const ca=[...head,['HOJA DE RUTA — CAÑOS / PERFILES'],['Perfil','Barra N°','Secuencia de cortes','Desperdicio (mm)','Sobrante útil (mm)']];
+  if(caMats.length){ caMats.forEach(m=>{ const lbl=caLabel(m,state.canos.mats.indexOf(m)); m.result.bars.forEach((b,bi)=>{
     const seq=b.cuts.map(c=>`${c.code}:${c.len}mm`).join('  +  ');
-    ca.push([bi+1,seq,Math.round(b.desperdicio),Math.round(b.sobrante)]);
-  }); } else ca.push(['Sin datos','','','']);
+    ca.push([lbl,bi+1,seq,Math.round(b.desperdicio),Math.round(b.sobrante)]);
+  }); }); } else ca.push(['Sin datos','','','','']);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ca), 'Caños');
 
   XLSX.writeFile(wb, `OptiCorte_${proj.replace(/[^\w\-]+/g,'_')}.xlsx`);
@@ -1245,52 +1344,63 @@ async function exportPDF(){
 
   header();
 
-  const rc=state.chapas.result;
-  if(rc){
+  const chMatsP=state.chapas.mats.filter(m=>m.result);
+  if(chMatsP.length){
     sectionTitle('CHAPAS — Optimización 2D',[30,111,217]);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(60,70,85);
-    doc.text(`Chapa ${rc.L}×${rc.W} mm (${rc.esp}) · Chapas: ${rc.kpi.nSheets} · Aprov. ${fmt(rc.kpi.avgUtil)}% · Desperdicio ${fmt(rc.kpi.waste)}% · Piezas ${rc.kpi.placed}/${rc.kpi.req}`,M,y); y+=7;
-
-    for(let si=0; si<rc.sheets.length; si++){
-      const svg=buildSheetSVG(si);
-      const imgW=PW-2*M, imgH=imgW*(rc.W/rc.L);
-      checkPage(imgH+8);
-      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(30,111,217);
-      doc.text(`Chapa #${si+1}`,M,y); y+=3;
-      const png=await svgToPng(svg, 760, 760*(rc.W/rc.L));
-      if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+3; }
-      // tabla piezas de esta chapa
-      const agg={}; rc.sheets[si].placed.forEach(p=>{const key=p.code+'|'+p.w+'x'+p.h;agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0};agg[key].n++;});
-      doc.setFontSize(8); doc.setTextColor(60,70,85); doc.setFont('helvetica','normal');
-      Object.values(agg).forEach(a=>{ checkPage(5); doc.text(`• ${a.code}: ${a.w}×${a.h} mm  ×${a.n}`,M+2,y); y+=4; });
-      const rz=rc.sheets[si].retazo;
-      if(rz&&rz.w>20&&rz.h>20){ checkPage(5); doc.setTextColor(224,106,10); doc.text(`▣ Retazo útil: ${Math.round(rz.w)}×${Math.round(rz.h)} mm`,M+2,y); y+=6; }
+    for(const m of chMatsP){
+      const rc=m.result, lbl=chLabel(m,state.chapas.mats.indexOf(m));
+      checkPage(14);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,111,217);
+      doc.text(`▸ ${lbl}`,M,y); y+=4.5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(60,70,85);
+      doc.text(`${rc.L}×${rc.W} mm${rc.esp?(' ('+rc.esp+')'):''} · Chapas: ${rc.kpi.nSheets} · Aprov. ${fmt(rc.kpi.avgUtil)}% · Desperdicio ${fmt(rc.kpi.waste)}% · Piezas ${rc.kpi.placed}/${rc.kpi.req}`,M,y); y+=6;
+      for(let si=0; si<rc.sheets.length; si++){
+        const svg=buildSheetSVG(rc,si);
+        const imgW=PW-2*M, imgH=imgW*(rc.W/rc.L);
+        checkPage(imgH+8);
+        doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(30,111,217);
+        doc.text(`${lbl} — Chapa #${si+1}`,M,y); y+=3;
+        const png=await svgToPng(svg, 760, 760*(rc.W/rc.L));
+        if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+3; }
+        const agg={}; rc.sheets[si].placed.forEach(p=>{const key=p.code+'|'+p.w+'x'+p.h;agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0};agg[key].n++;});
+        doc.setFontSize(8); doc.setTextColor(60,70,85); doc.setFont('helvetica','normal');
+        Object.values(agg).forEach(a=>{ checkPage(5); doc.text(`• ${a.code}: ${a.w}×${a.h} mm  ×${a.n}`,M+2,y); y+=4; });
+        const rz=rc.sheets[si].retazo;
+        if(rz&&rz.w>20&&rz.h>20){ checkPage(5); doc.setTextColor(224,106,10); doc.text(`▣ Retazo útil: ${Math.round(rz.w)}×${Math.round(rz.h)} mm`,M+2,y); y+=6; }
+        y+=2;
+      }
       y+=2;
     }
   }
 
-  const rk=state.canos.result;
-  if(rk){
+  const caMatsP=state.canos.mats.filter(m=>m.result);
+  if(caMatsP.length){
     checkPage(20);
     sectionTitle('CAÑOS / PERFILES — Optimización 1D',[245,130,32]);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(60,70,85);
-    doc.text(`Barra ${rk.barL} mm (${rk.desc}) · Barras: ${rk.kpi.nBars} · Aprov. ${fmt(rk.kpi.util)}% · Desperdicio ${fmt(rk.kpi.desp)} mm · Sobrante ${fmt(rk.kpi.sobra)} mm`,M,y); y+=7;
-
-    for(let bi=0; bi<rk.bars.length; bi++){
-      const svg=buildBarSVG(rk.bars[bi],bi).replace(/^<div>.*?<svg/s,'<svg').replace(/<\/svg><\/div>$/,'</svg>');
-      const imgW=PW-2*M, imgH=imgW*(46/760);
-      checkPage(imgH+10);
-      const png=await svgToPng(svg, 760, 46);
-      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(224,106,10);
-      doc.text(`Barra #${bi+1}`,M,y); y+=2.5;
-      if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+2; }
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(60,70,85);
-      const seq=rk.bars[bi].cuts.map(c=>`${c.code}:${c.len}`).join('  +  ');
-      doc.text(`Cortes: ${seq}  |  Desperdicio: ${Math.round(rk.bars[bi].desperdicio)}mm  |  Sobrante: ${Math.round(rk.bars[bi].sobrante)}mm`,M+2,y,{maxWidth:PW-2*M-4}); y+=7;
+    for(const m of caMatsP){
+      const rk=m.result, lbl=caLabel(m,state.canos.mats.indexOf(m));
+      checkPage(14);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(224,106,10);
+      doc.text(`▸ ${lbl}`,M,y); y+=4.5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(60,70,85);
+      doc.text(`Barra ${rk.barL} mm · Barras: ${rk.kpi.nBars} · Aprov. ${fmt(rk.kpi.util)}% · Desperdicio ${fmt(rk.kpi.desp)} mm · Sobrante ${fmt(rk.kpi.sobra)} mm`,M,y); y+=6;
+      for(let bi=0; bi<rk.bars.length; bi++){
+        const svg=buildBarSVG(rk,rk.bars[bi],bi).replace(/^<div>.*?<svg/s,'<svg').replace(/<\/svg><\/div>$/,'</svg>');
+        const imgW=PW-2*M, imgH=imgW*(46/760);
+        checkPage(imgH+10);
+        const png=await svgToPng(svg, 760, 46);
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(224,106,10);
+        doc.text(`${lbl} — Barra #${bi+1}`,M,y); y+=2.5;
+        if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+2; }
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(60,70,85);
+        const seq=rk.bars[bi].cuts.map(c=>`${c.code}:${c.len}`).join('  +  ');
+        doc.text(`Cortes: ${seq}  |  Desperdicio: ${Math.round(rk.bars[bi].desperdicio)}mm  |  Sobrante: ${Math.round(rk.bars[bi].sobrante)}mm`,M+2,y,{maxWidth:PW-2*M-4}); y+=7;
+      }
+      y+=2;
     }
   }
 
-  if(!rc&&!rk){
+  if(!chMatsP.length&&!caMatsP.length){
     doc.setFontSize(11); doc.setTextColor(120,130,145);
     doc.text('No hay cálculos realizados. Ejecutá una optimización antes de exportar.',M,y);
   }
@@ -1312,8 +1422,8 @@ function saveJob(){
     id: ot.toLowerCase(),
     savedAt: Date.now(),
     project:$('projectName').value, ot, oc:$('meta-oc').value.trim(), cliente:$('meta-cliente').value.trim(),
-    chapas:{ largo:$('ch-largo').value, ancho:$('ch-ancho').value, espesor:$('ch-espesor').value, gap:$('ch-gap').value, margen:$('ch-margen').value, piezas:state.chapas.piezas.map(p=>({...p})) },
-    canos:{ largo:$('ca-largo').value, sangria:$('ca-sangria').value, reuse:$('ca-reuse').value, desc:$('ca-desc').value, cortes:state.canos.cortes.map(c=>({...c})) }
+    chapas:{ mats: state.chapas.mats.map(m=>({largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:m.piezas.map(p=>({...p}))})) },
+    canos:{ mats: state.canos.mats.map(m=>({largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,cortes:m.cortes.map(c=>({...c}))})) }
   };
   const jobs=getJobs();
   const idx=jobs.findIndex(x=>x.id===job.id);
@@ -1331,13 +1441,15 @@ function renderJobsList(){
   if(!jobs.length){ cont.innerHTML='<div class="jobs-empty">📁 No hay OTs guardadas todavía.<br>Completá los datos del trabajo y presioná <strong>Guardar OT</strong>.</div>'; return; }
   cont.innerHTML = jobs.map(j=>{
     const d=new Date(j.savedAt).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const np=(j.chapas&&j.chapas.piezas?j.chapas.piezas.length:0), nc=(j.canos&&j.canos.cortes?j.canos.cortes.length:0);
+    const chMats=(j.chapas&&j.chapas.mats)?j.chapas.mats:(j.chapas&&j.chapas.piezas?[j.chapas]:[]);
+    const caMats=(j.canos&&j.canos.mats)?j.canos.mats:(j.canos&&j.canos.cortes?[j.canos]:[]);
+    const np=chMats.reduce((s,m)=>s+((m.piezas||[]).length),0), nc=caMats.reduce((s,m)=>s+((m.cortes||[]).length),0);
     return `<div class="job-row">
       <div class="job-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
       <div class="job-info">
         <div class="job-ot">OT ${esc(j.ot)}</div>
         <div class="job-meta">${esc(j.cliente||'Sin cliente')} · ${esc(j.project||'—')}</div>
-        <div class="job-sub">${np} pieza(s) · ${nc} corte(s) · guardado ${esc(d)}</div>
+        <div class="job-sub">${chMats.length} chapa(s) · ${caMats.length} perfil(es) · ${np} pieza(s) · ${nc} corte(s) · ${esc(d)}</div>
       </div>
       <div class="job-actions">
         <button class="btn-job-load" data-id="${esc(j.id)}">Cargar</button>
@@ -1354,17 +1466,17 @@ function loadJob(id){
   $('projectName').value=j.project||'';
   $('meta-ot').value=j.ot||''; $('meta-oc').value=j.oc||''; $('meta-cliente').value=j.cliente||'';
   const ch=j.chapas||{}, ca=j.canos||{};
-  if(ch.largo!=null)$('ch-largo').value=ch.largo; if(ch.ancho!=null)$('ch-ancho').value=ch.ancho;
-  $('ch-espesor').value=ch.espesor||''; if(ch.gap!=null)$('ch-gap').value=ch.gap; if(ch.margen!=null)$('ch-margen').value=ch.margen;
-  state.chapas.piezas=(ch.piezas||[]).map(p=>({...p})); renderPiezas();
-  if(ca.largo!=null)$('ca-largo').value=ca.largo; if(ca.sangria!=null)$('ca-sangria').value=ca.sangria;
-  if(ca.reuse!=null)$('ca-reuse').value=ca.reuse; $('ca-desc').value=ca.desc||'';
-  state.canos.cortes=(ca.cortes||[]).map(c=>({...c})); renderCortes();
-  state.chapas.result=null; state.canos.result=null;
+  // compatibilidad: formato viejo (un solo material) o nuevo (mats[])
+  const chMats=(ch.mats&&ch.mats.length)?ch.mats:(ch.piezas?[ch]:[]);
+  state.chapas.mats = chMats.length? chMats.map(m=>newChMat({largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,piezas:(m.piezas||[]).map(p=>({...p}))})) : [newChMat()];
+  state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats();
+  const caMats=(ca.mats&&ca.mats.length)?ca.mats:(ca.cortes?[ca]:[]);
+  state.canos.mats = caMats.length? caMats.map(m=>newCaMat({largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,cortes:(m.cortes||[]).map(c=>({...c}))})) : [newCaMat()];
+  state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats();
   closeJobs();
   // recalcular para mostrar resultados ya hechos
-  if(state.chapas.piezas.length) calcularChapas();
-  if(state.canos.cortes.length) calcularCanos();
+  if(state.chapas.mats.some(m=>m.piezas.length)) calcularChapas(); else renderChapasResult();
+  if(state.canos.mats.some(m=>m.cortes.length)) calcularCanos(); else renderCanosResult();
   toast('OT '+(j.ot||'')+' cargada','ok');
 }
 
@@ -1383,17 +1495,18 @@ function closePrintMenu(){ $('print-dropdown').classList.remove('show'); }
 function print(mode){          // mode: 'all' | 'route' | 'diagram'
   closePrintMenu();
   const isChapas = state.activeTab==='chapas';
-  const res = isChapas ? state.chapas.result : state.canos.result;
-  if(!res){ toast('Primero calculá una optimización en esta pestaña','err'); return; }
+  const mats = isChapas ? state.chapas.mats : state.canos.mats;
+  if(!mats.some(m=>m.result)){ toast('Primero calculá una optimización en esta pestaña','err'); return; }
 
-  // chapas: para diagrama/todo, renderizar TODAS las chapas (no solo la visible)
+  // chapas: para diagrama/todo, renderizar TODAS las chapas de cada material
   if(isChapas && mode!=='route'){
-    const cont=$('ch-print');
-    if(cont) cont.innerHTML = res.sheets.map((s,i)=>
-      `<div style="margin-bottom:14px;break-inside:avoid">
-         <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:4px">Chapa #${i+1} — ${res.L}×${res.W} mm (${esc(res.esp||'')})</div>
-         ${buildSheetSVG(i)}
-       </div>`).join('');
+    mats.forEach((m,mi)=>{ if(!m.result) return; const cont=$('print-'+m.id); if(!cont) return;
+      cont.innerHTML = m.result.sheets.map((s,i)=>
+        `<div style="margin-bottom:14px;break-inside:avoid">
+           <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:4px">${esc(chLabel(m,mi))} — Chapa #${i+1} (${m.result.L}×${m.result.W} mm)</div>
+           ${buildSheetSVG(m.result,i)}
+         </div>`).join('');
+    });
   }
 
   // encabezado de impresión
@@ -1483,22 +1596,24 @@ function init(){
   // OTs guardadas
   updateJobsCount();
   $('jobs-modal').addEventListener('click', e=>{ if(e.target.id==='jobs-modal') closeJobs(); });
-  // precarga piezas (2D)
-  [{codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
-   {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
-   {codigo:'REFUERZO',largo:1200,ancho:150,cant:3,rot:false}].forEach(p=>state.chapas.piezas.push(p));
-  renderPiezas();
+  // precarga materiales de ejemplo
+  state.chapas.mats=[ newChMat({ espesor:'2 mm DD C.16', piezas:[
+    {codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
+    {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
+    {codigo:'REFUERZO',largo:1200,ancho:150,cant:3,rot:false} ] }) ];
+  state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats();
 
-  // precarga cortes (1D)
-  [{codigo:'PATA',largo:1100,cant:8},
-   {codigo:'TRAVESAÑO',largo:750,cant:6},
-   {codigo:'LARGUERO',largo:2400,cant:4},
-   {codigo:'REFUERZO',largo:480,cant:10}].forEach(c=>state.canos.cortes.push(c));
-  renderCortes();
+  state.canos.mats=[ newCaMat({ desc:'Caño 40×40×2 St52', cortes:[
+    {codigo:'PATA',largo:1100,cant:8},
+    {codigo:'TRAVESAÑO',largo:750,cant:6},
+    {codigo:'LARGUERO',largo:2400,cant:4},
+    {codigo:'REFUERZO',largo:480,cant:10} ] }) ];
+  state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats();
 }
 init();
 
-return { switchTab, dirty, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
+return { switchTab, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
+         chField, caField, selChMat, selCaMat,
          calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
          login, logout, print, togglePrintMenu,
          saveJob, openJobs, closeJobs, loadJob, deleteJob };
