@@ -257,6 +257,74 @@ input{font-family:inherit}
 .toast.ok{background:#1e8a4f}
 .toast.err{background:#c0392b}
 
+/* ===== LOGO IMG (con fallback a SVG) ===== */
+.logo-img{height:42px;width:auto;display:block}
+.brand .logo-svg{display:none}            /* oculto si la imagen carga */
+.brand.no-img .logo-img{display:none}     /* si la imagen falla, se muestra el SVG */
+.brand.no-img .logo-svg{display:block}
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgba(30,111,217,.18), transparent 55%),
+    radial-gradient(1000px 600px at 100% 100%, rgba(245,130,32,.18), transparent 55%),
+    #0E1626;
+}
+#login-screen.hidden{display:none}
+.login-card{
+  width:100%;max-width:400px;background:#fff;border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);padding:38px 34px 30px;
+  text-align:center;animation:loginIn .4s ease;
+}
+@keyframes loginIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.login-logo{height:84px;width:auto;margin:0 auto 6px;display:block}
+.login-logo-svg{width:120px;height:84px;margin:0 auto 6px;display:block}
+.login-title{font-size:22px;margin-top:14px}
+.login-sub{font-size:13px;color:var(--text-secondary);margin-top:4px;margin-bottom:26px}
+.login-field{text-align:left;margin-bottom:14px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.login-input-wrap{position:relative}
+.login-input-wrap .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#9aa4b6;width:18px;height:18px}
+.login-field input{
+  width:100%;padding:12px 14px 12px 40px;font-size:14px;font-weight:500;
+  border:1.5px solid var(--border-strong);border-radius:10px;color:var(--text);transition:.15s;
+}
+.login-field input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+.login-row{display:flex;align-items:center;justify-content:space-between;margin:4px 0 22px;font-size:12.5px}
+.login-row label{display:flex;align-items:center;gap:7px;color:var(--text-secondary);cursor:pointer;font-weight:500}
+.login-row input{accent-color:var(--blue);width:15px;height:15px}
+.btn-login{
+  width:100%;padding:13px;border-radius:10px;background:var(--grad-btn);color:#fff;
+  font-weight:700;font-size:15px;box-shadow:0 8px 22px rgba(30,111,217,.35);transition:.15s;
+}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(30,111,217,.45)}
+.btn-login:active{transform:translateY(0)}
+.login-error{
+  background:var(--danger-light);color:#c0392b;border:1px solid #f3c2bc;border-radius:9px;
+  padding:10px 12px;font-size:12.5px;font-weight:600;margin-bottom:16px;display:none;
+}
+.login-error.show{display:block;animation:loginIn .25s}
+.login-foot{margin-top:24px;font-size:11px;color:#9aa4b6}
+
+/* ===== USER CHIP / LOGOUT en header ===== */
+.user-box{display:flex;align-items:center;gap:10px;margin-left:14px;padding-left:14px;border-left:1px solid var(--border)}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;background:var(--grad-btn);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;
+}
+.user-meta{display:flex;flex-direction:column;line-height:1.2}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}
+.user-role{font-size:10.5px;color:var(--text-secondary)}
+.btn-logout{
+  width:34px;height:34px;border-radius:8px;background:var(--surface-alt);border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:.15s;
+}
+.btn-logout:hover{background:var(--danger-light);color:var(--danger);border-color:#f3c2bc}
+.btn-logout svg{width:17px;height:17px}
+#app-shell.hidden{display:none}
+
 @media (max-width:1320px){
   .panel-left{width:340px}
   .kpi .k-value{font-size:26px}
@@ -265,8 +333,55 @@ input{font-family:inherit}
 </head>
 <body>
 
+<!-- ============ LOGIN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <img class="login-logo" src="logo.png" alt="OptiCorte" onerror="this.style.display='none';document.getElementById('login-logo-svg').style.display='block'">
+    <svg id="login-logo-svg" class="login-logo-svg" style="display:none" viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="llB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E86E0"/><stop offset="1" stop-color="#1557B0"/></linearGradient>
+        <linearGradient id="llO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9A04B"/><stop offset="1" stop-color="#E06A0A"/></linearGradient>
+      </defs>
+      <path d="M8 34 L52 20 L52 56 L8 70 Z" fill="url(#llB)"/>
+      <path d="M18 36 L34 48 M38 28 L26 54 M46 38 L32 56" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+      <rect x="58" y="28" width="50" height="26" rx="4" fill="url(#llO)" transform="rotate(-6 83 41)"/>
+      <ellipse cx="104" cy="39" rx="5" ry="13" fill="#C95A06" transform="rotate(-6 104 39)"/>
+      <path d="M66 37 h32 M66 45 h32" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7" transform="rotate(-6 83 41)"/>
+    </svg>
+    <h1 class="login-title"><span style="color:var(--blue)">Opti</span><span style="color:var(--orange)">Corte</span></h1>
+    <p class="login-sub">Software de Optimización Industrial</p>
+
+    <div class="login-error" id="login-error"></div>
+
+    <form id="login-form" onsubmit="return OptiCorte.login(event)">
+      <div class="login-field">
+        <label for="login-user">Usuario</label>
+        <div class="login-input-wrap">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+          <input id="login-user" type="text" autocomplete="username" placeholder="usuario" autofocus required>
+        </div>
+      </div>
+      <div class="login-field">
+        <label for="login-pass">Contraseña</label>
+        <div class="login-input-wrap">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </div>
+      </div>
+      <div class="login-row">
+        <label><input type="checkbox" id="login-remember"> Mantener sesión iniciada</label>
+      </div>
+      <button type="submit" class="btn-login">Ingresar</button>
+    </form>
+    <div class="login-foot">OptiCorte v1.0 · Acceso restringido</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app-shell" class="hidden">
 <header class="header">
   <div class="brand">
+    <img class="logo-img" src="logo.png" alt="OptiCorte" onerror="this.closest('.brand').classList.add('no-img');this.style.display='none'">
     <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="lgBlue" x1="0" y1="0" x2="1" y2="1">
@@ -302,6 +417,16 @@ input{font-family:inherit}
     <button class="btn btn-pdf" onclick="OptiCorte.exportPDF()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 15h8M8 18h5"/></svg>
       Exportar PDF
+    </button>
+  </div>
+  <div class="user-box">
+    <div class="user-avatar" id="user-avatar">A</div>
+    <div class="user-meta">
+      <span class="user-name" id="user-name">Usuario</span>
+      <span class="user-role" id="user-role">—</span>
+    </div>
+    <button class="btn-logout" title="Cerrar sesión" onclick="OptiCorte.logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
   </div>
 </header>
@@ -396,6 +521,8 @@ input{font-family:inherit}
     </div></div>
   </section>
 </main>
+
+</div><!-- /app-shell -->
 
 <div class="toast" id="toast"></div>
 
@@ -984,8 +1111,69 @@ async function exportPDF(){
   toast('PDF exportado','ok');
 }
 
+/* ===================== AUTENTICACIÓN (cliente) ===================== */
+/* ⚠ Login simple del lado del cliente. Editá usuarios y contraseñas acá.
+   No es seguridad real (las credenciales viajan en el código). Para acceso
+   realmente seguro usar Cloudflare Access delante del sitio. */
+const USERS = {
+  'admin':  { pass:'opticorte', name:'Administrador', role:'Administrador' },
+  'taller': { pass:'taller2024', name:'Taller',        role:'Operario' }
+};
+const SESSION_KEY = 'opticorte_user';
+let currentUser = null;
+
+function applyUser(uname){
+  const u = USERS[uname]; if(!u) return false;
+  currentUser = uname;
+  $('user-avatar').textContent = (u.name||uname).charAt(0).toUpperCase();
+  $('user-name').textContent = u.name||uname;
+  $('user-role').textContent = u.role||'';
+  $('login-screen').classList.add('hidden');
+  $('app-shell').classList.remove('hidden');
+  return true;
+}
+
+function login(e){
+  if(e) e.preventDefault();
+  const uname = $('login-user').value.trim().toLowerCase();
+  const pass  = $('login-pass').value;
+  const err   = $('login-error');
+  const u = USERS[uname];
+  if(!u || u.pass !== pass){
+    err.textContent = '⚠ Usuario o contraseña incorrectos.';
+    err.classList.add('show');
+    $('login-pass').value=''; $('login-pass').focus();
+    return false;
+  }
+  err.classList.remove('show');
+  // persistir sesión
+  try{
+    sessionStorage.setItem(SESSION_KEY, uname);
+    if($('login-remember').checked) localStorage.setItem(SESSION_KEY, uname);
+    else localStorage.removeItem(SESSION_KEY);
+  }catch(_){}
+  applyUser(uname);
+  toast('Bienvenido, '+(u.name||uname),'ok');
+  return false;
+}
+
+function logout(){
+  try{ sessionStorage.removeItem(SESSION_KEY); localStorage.removeItem(SESSION_KEY); }catch(_){}
+  currentUser=null;
+  $('app-shell').classList.add('hidden');
+  $('login-screen').classList.remove('hidden');
+  $('login-pass').value=''; $('login-user').focus();
+}
+
+function checkSession(){
+  let uname=null;
+  try{ uname = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY); }catch(_){}
+  if(uname && USERS[uname]) applyUser(uname);
+}
+
 /* ===================== INIT ===================== */
 function init(){
+  checkSession();
   // precarga piezas (2D)
   [{codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
    {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
@@ -1002,7 +1190,8 @@ function init(){
 init();
 
 return { switchTab, dirty, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
-         calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF };
+         calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
+         login, logout };
 })();
 </script>
 </body>
