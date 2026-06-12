@@ -205,6 +205,9 @@ input{font-family:inherit}
 .cost-fields{border-top:1px solid var(--border);margin-top:14px;padding-top:12px}
 .cost-fields-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
 .cost-fields-title span{color:var(--text-secondary);font-weight:500}
+.veta-field{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;padding:4px 0 2px}
+.veta-field input{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0}
+.veta-field .muted{font-weight:400;font-size:12px}
 .cost-strip{
   display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;
   background:linear-gradient(135deg,#FFF7EE,#FFF1E6);border:1px solid #F6D9BC;
@@ -347,8 +350,13 @@ input{font-family:inherit}
 .nav-btn:hover:not(:disabled){background:var(--blue);color:#fff;border-color:var(--blue)}
 .nav-btn:disabled{opacity:.35;cursor:not-allowed}
 .nav-label{font-size:13px;font-weight:600;min-width:90px;text-align:center}
-.viz-canvas{padding:20px;display:flex;justify-content:center;background:linear-gradient(180deg,#fbfcfe,#f5f7fb);min-height:200px}
-.viz-canvas svg{max-width:100%;height:auto;border-radius:8px}
+.viz-canvas{padding:20px;text-align:center;overflow:auto;background:linear-gradient(180deg,#fbfcfe,#f5f7fb);min-height:200px}
+.viz-canvas svg{max-width:100%;height:auto;border-radius:8px;display:inline-block;vertical-align:top}
+.viz-tools{display:flex;align-items:center;gap:14px}
+.zoom-ctrl{display:flex;align-items:center;gap:5px}
+.zoom-lbl{font-size:12px;font-weight:700;min-width:46px;text-align:center;color:var(--text-secondary);cursor:pointer;user-select:none}
+.zoom-lbl:hover{color:var(--blue)}
+.veta-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--blue-dark);background:var(--blue-light);border:1px solid #cfe0f7;border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em}
 
 /* result tables */
 .tbl-result{width:100%;border-collapse:collapse;font-size:13px}
@@ -480,6 +488,13 @@ input{font-family:inherit}
 /* ===== IMPRESIÓN ===== */
 .print-only{display:none}
 #print-header{display:none}
+#labels-sheet{display:none}
+.label-card{border:1px solid #cdd4e0;border-left:5px solid var(--blue);border-radius:6px;padding:8px 11px;break-inside:avoid;page-break-inside:avoid}
+.label-card .lc-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.label-card .lc-code{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:#1B2535;word-break:break-word}
+.label-card .lc-seq{font-size:10px;color:#69768B;font-weight:700;white-space:nowrap}
+.label-card .lc-dim{font-size:14px;font-weight:600;color:#1B2535;margin-top:3px}
+.label-card .lc-meta{font-size:10px;color:#69768B;margin-top:5px}
 @media print{
   @page{ margin:13mm; }
   body{ background:#fff !important; }
@@ -489,8 +504,8 @@ input{font-family:inherit}
   .workspace:not(.active){ display:none !important; }
   .panel-right{ width:100% !important; gap:10px !important; }
   .card{ box-shadow:none !important; border:1px solid #cdd4e0 !important; break-inside:avoid; }
-  .viz-head .nav-sheets{ display:none !important; }
-  #ch-svg{ display:none !important; }
+  .viz-head .viz-tools{ display:none !important; }
+  .viz-canvas{ display:none !important; }
   .print-only{ display:block !important; }
   .viz-canvas{ background:#fff !important; padding:10px !important; }
   .kpi{ break-inside:avoid; }
@@ -499,6 +514,9 @@ input{font-family:inherit}
   /* modos */
   body.pm-diagram .print-route, body.pm-diagram .kpi-row, body.pm-diagram .print-summary{ display:none !important; }
   body.pm-route .print-diagram, body.pm-route .kpi-row{ display:none !important; }
+  body.pm-labels #print-header{ display:none !important; }
+  body.pm-labels .workspace{ display:none !important; }
+  body.pm-labels #labels-sheet{ display:grid !important; grid-template-columns:repeat(3,1fr); gap:5mm; }
 }
 
 @media (max-width:1320px){
@@ -607,6 +625,10 @@ input{font-family:inherit}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>
           Solo diagrama de corte
         </button>
+        <button onclick="OptiCorte.print('labels')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.2"/></svg>
+          Etiquetas (pegar en material)
+        </button>
       </div>
     </div>
     <button class="btn btn-excel" onclick="OptiCorte.exportExcel()">
@@ -698,6 +720,7 @@ input{font-family:inherit}
           <div style="flex:1"><label>GAP piezas (mm)</label><input class="input" type="number" id="ch-gap" value="5" oninput="OptiCorte.chField('gap',this.value)"></div>
           <div style="flex:1"><label>Margen borde (mm)</label><input class="input" type="number" id="ch-margen" value="10" oninput="OptiCorte.chField('margen',this.value)"></div>
         </div></div>
+        <label class="veta-field"><input type="checkbox" id="ch-veta" onchange="OptiCorte.chField('veta',this.checked)"> Material con veta / laminado <span class="muted">— no rota las piezas (inox, aluminio)</span></label>
         <div class="cost-fields">
           <div class="cost-fields-title">💰 Costos y peso <span>(opcional)</span></div>
           <div class="field"><div class="row2">
@@ -787,6 +810,8 @@ input{font-family:inherit}
   </section>
 </main>
 
+<div id="labels-sheet"></div>
+
 <div id="jobs-modal" class="modal-overlay hidden">
   <div class="modal-card">
     <div class="modal-head">
@@ -847,7 +872,17 @@ const state = {
   canos:{ mats:[], active:0 }
 };
 let chSeq=0, caSeq=0;
-function newChMat(o){ const m=Object.assign({ id:'chm'+(++chSeq), color:'', largo:3000, ancho:1500, espesor:'', gap:5, margen:10, espesorMM:'', densidad:7.85, precioM2:'', piezas:[], result:null, cur:0 }, o||{}); if(!m.color) m.color=MAT_COLORS[(chSeq-1)%MAT_COLORS.length]; if(m.densidad===undefined||m.densidad===null) m.densidad=7.85; return m; }
+let isDirty=false;
+function markDirty(){ isDirty=true; }
+function clearDirty(){ isDirty=false; }
+function confirmDiscard(action){ return !isDirty || confirm('⚠ Tenés cambios sin guardar en la OT actual.\nSi '+action+' se perderán.\n\n¿Querés continuar de todos modos?'); }
+function nextOtNumber(){
+  let best=null;
+  getJobs().forEach(j=>{ const mt=String(j.ot||'').match(/^(.*?)(\d+)\s*$/); if(mt){ const n=parseInt(mt[2]); if(best===null||n>best.n) best={prefix:mt[1],n,pad:mt[2].length}; } });
+  if(!best) return 'OT-0001';
+  return best.prefix + String(best.n+1).padStart(best.pad,'0');
+}
+function newChMat(o){ const m=Object.assign({ id:'chm'+(++chSeq), color:'', largo:3000, ancho:1500, espesor:'', gap:5, margen:10, veta:false, espesorMM:'', densidad:7.85, precioM2:'', piezas:[], result:null, cur:0 }, o||{}); if(!m.color) m.color=MAT_COLORS[(chSeq-1)%MAT_COLORS.length]; if(m.densidad===undefined||m.densidad===null) m.densidad=7.85; return m; }
 function newCaMat(o){ const m=Object.assign({ id:'cam'+(++caSeq), color:'', largo:6000, sangria:3, reuse:200, desc:'', kgM:'', precioM:'', cortes:[], result:null }, o||{}); if(!m.color) m.color=MAT_COLORS[(caSeq-1)%MAT_COLORS.length]; return m; }
 function chM(){ return state.chapas.mats[state.chapas.active]; }
 function caM(){ return state.canos.mats[state.canos.active]; }
@@ -892,11 +927,11 @@ function renderChMats(){
   cont.querySelectorAll('[data-rm]').forEach(s=>s.onclick=e=>{ e.stopPropagation(); removeChMat(+s.dataset.rm); });
   $('ch-mat-add').onclick=addChMat;
 }
-function loadChInputs(){ const m=chM(); $('ch-largo').value=m.largo; $('ch-ancho').value=m.ancho; $('ch-espesor').value=m.espesor; $('ch-gap').value=m.gap; $('ch-margen').value=m.margen; $('ch-espmm').value=m.espesorMM; $('ch-dens').value=m.densidad; $('ch-precio').value=m.precioM2; }
+function loadChInputs(){ const m=chM(); $('ch-largo').value=m.largo; $('ch-ancho').value=m.ancho; $('ch-espesor').value=m.espesor; $('ch-gap').value=m.gap; $('ch-margen').value=m.margen; $('ch-veta').checked=!!m.veta; $('ch-espmm').value=m.espesorMM; $('ch-dens').value=m.densidad; $('ch-precio').value=m.precioM2; }
 function selectChMat(i){ state.chapas.active=i; loadChInputs(); renderPiezas(); renderChMats(); }
-function addChMat(){ state.chapas.mats.push(newChMat()); state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); }
-function removeChMat(i){ const m=state.chapas.mats[i]; if((m.piezas&&m.piezas.length) && !confirm('¿Quitar el material "'+chLabel(m,i)+'" y sus piezas?')) return; state.chapas.mats.splice(i,1); if(state.chapas.active>=state.chapas.mats.length) state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult(); }
-function chField(f,v){ chM()[f]=v; chM().result=null; if(f==='espesor') renderChMats(); renderChapasResult(); }
+function addChMat(){ markDirty(); state.chapas.mats.push(newChMat()); state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); }
+function removeChMat(i){ const m=state.chapas.mats[i]; if((m.piezas&&m.piezas.length) && !confirm('¿Quitar el material "'+chLabel(m,i)+'" y sus piezas?')) return; markDirty(); state.chapas.mats.splice(i,1); if(state.chapas.active>=state.chapas.mats.length) state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult(); }
+function chField(f,v){ markDirty(); chM()[f]=v; chM().result=null; if(f==='espesor') renderChMats(); renderChapasResult(); }
 function selChMat(i){ selectChMat(i); }
 
 function renderCaMats(){
@@ -913,14 +948,14 @@ function renderCaMats(){
 }
 function loadCaInputs(){ const m=caM(); $('ca-largo').value=m.largo; $('ca-sangria').value=m.sangria; $('ca-reuse').value=m.reuse; $('ca-desc').value=m.desc; $('ca-kgm').value=m.kgM; $('ca-precio').value=m.precioM; }
 function selectCaMat(i){ state.canos.active=i; loadCaInputs(); renderCortes(); renderCaMats(); }
-function addCaMat(){ state.canos.mats.push(newCaMat()); state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); }
-function removeCaMat(i){ const m=state.canos.mats[i]; if((m.cortes&&m.cortes.length) && !confirm('¿Quitar el perfil "'+caLabel(m,i)+'" y sus cortes?')) return; state.canos.mats.splice(i,1); if(state.canos.active>=state.canos.mats.length) state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult(); }
-function caField(f,v){ caM()[f]=v; caM().result=null; if(f==='desc') renderCaMats(); renderCanosResult(); }
+function addCaMat(){ markDirty(); state.canos.mats.push(newCaMat()); state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); }
+function removeCaMat(i){ const m=state.canos.mats[i]; if((m.cortes&&m.cortes.length) && !confirm('¿Quitar el perfil "'+caLabel(m,i)+'" y sus cortes?')) return; markDirty(); state.canos.mats.splice(i,1); if(state.canos.active>=state.canos.mats.length) state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult(); }
+function caField(f,v){ markDirty(); caM()[f]=v; caM().result=null; if(f==='desc') renderCaMats(); renderCanosResult(); }
 function selCaMat(i){ selectCaMat(i); }
 
 /* ===================== PIEZAS (2D) tabla ===================== */
-function addPieza(p){ chM().piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true}); renderPiezas(); chM().result=null; renderChapasResult(); }
-function delPieza(i){ chM().piezas.splice(i,1); renderPiezas(); chM().result=null; renderChapasResult(); }
+function addPieza(p){ markDirty(); chM().piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true}); renderPiezas(); chM().result=null; renderChapasResult(); }
+function delPieza(i){ markDirty(); chM().piezas.splice(i,1); renderPiezas(); chM().result=null; renderChapasResult(); }
 function renderPiezas(){
   const tb=$('piezas-body'); tb.innerHTML='';
   chM().piezas.forEach((p,i)=>{
@@ -935,11 +970,11 @@ function renderPiezas(){
     tb.appendChild(tr);
   });
 }
-function editPieza(i,f,v){ chM().piezas[i][f]=v; chM().result=null; renderChapasResult(); }
+function editPieza(i,f,v){ markDirty(); chM().piezas[i][f]=v; chM().result=null; renderChapasResult(); }
 
 /* ===================== CORTES (1D) tabla ===================== */
-function addCorte(c){ caM().cortes.push(c||{codigo:'',largo:'',cant:1}); renderCortes(); caM().result=null; renderCanosResult(); }
-function delCorte(i){ caM().cortes.splice(i,1); renderCortes(); caM().result=null; renderCanosResult(); }
+function addCorte(c){ markDirty(); caM().cortes.push(c||{codigo:'',largo:'',cant:1}); renderCortes(); caM().result=null; renderCanosResult(); }
+function delCorte(i){ markDirty(); caM().cortes.splice(i,1); renderCortes(); caM().result=null; renderCanosResult(); }
 function renderCortes(){
   const tb=$('cortes-body'); tb.innerHTML='';
   caM().cortes.forEach((c,i)=>{
@@ -952,7 +987,7 @@ function renderCortes(){
     tb.appendChild(tr);
   });
 }
-function editCorte(i,f,v){ caM().cortes[i][f]=v; caM().result=null; renderCanosResult(); }
+function editCorte(i,f,v){ markDirty(); caM().cortes[i][f]=v; caM().result=null; renderCanosResult(); }
 
 /* ===================== ALGORITMO 2D — MaxRects (BSSF) ===================== */
 function rectsIntersect(a,b){
@@ -990,6 +1025,7 @@ function splitFree(free, used){
 function computeChapa(mat){
   const L=parseFloat(mat.largo)||0, W=parseFloat(mat.ancho)||0;
   const gap=parseFloat(mat.gap)||0, margen=parseFloat(mat.margen)||0, esp=(mat.espesor||'').trim();
+  const veta=!!mat.veta;
   if(L<=0||W<=0) return null;
   const piezas=mat.piezas.filter(p=>parseFloat(p.largo)>0 && parseFloat(p.ancho)>0 && parseInt(p.cant)>0);
   if(!piezas.length) return null;
@@ -1000,7 +1036,7 @@ function computeChapa(mat){
   let instances=[];
   const noFit=[];
   piezas.forEach(p=>{
-    const pw=parseFloat(p.largo), ph=parseFloat(p.ancho), q=parseInt(p.cant), rot=!!p.rot;
+    const pw=parseFloat(p.largo), ph=parseFloat(p.ancho), q=parseInt(p.cant), rot=(!!p.rot)&&!veta;
     const code=p.codigo||('P'+(instances.length+1));
     // cabe en la chapa bajo alguna orientación?
     const fitsNormal = pw<=usableW && ph<=usableH;
@@ -1069,7 +1105,7 @@ function computeChapa(mat){
   const pesoKg = totalM2 * espMM * dens;       // m² · mm · (kg/dm³) = kg
   const costo  = totalM2 * precioM2;
 
-  return { L,W,esp,gap,margen,usableW,usableH,sheets,colorMap,
+  return { L,W,esp,gap,margen,veta,usableW,usableH,sheets,colorMap,
     kpi:{ nSheets:sheets.length, avgUtil, waste:100-avgUtil, placed:totalPlaced, req:totalReq },
     cost:{ totalM2, pesoKg, costo, hasW:espMM>0&&dens>0, hasC:precioM2>0 },
     noFit };
@@ -1136,11 +1172,18 @@ function renderChapasResult(){
     }
 
     html+=`<div class="card print-diagram">
-      <div class="viz-head"><h3>Nesting${multi?(' · '+esc(chLabel(m,i))):''}</h3>
-        <div class="nav-sheets">
-          <button class="nav-btn" id="prev-${m.id}" onclick="OptiCorte.navSheet('${m.id}',-1)">‹</button>
-          <span class="nav-label" id="lbl-${m.id}"></span>
-          <button class="nav-btn" id="next-${m.id}" onclick="OptiCorte.navSheet('${m.id}',1)">›</button>
+      <div class="viz-head"><h3>Nesting${multi?(' · '+esc(chLabel(m,i))):''}${r.veta?' <span class="veta-tag">veta ⟂ sin rotar</span>':''}</h3>
+        <div class="viz-tools">
+          <div class="zoom-ctrl">
+            <button class="nav-btn" onclick="OptiCorte.zoomSheet('${m.id}',0.8)" title="Alejar">−</button>
+            <span class="zoom-lbl" id="zoom-${m.id}" onclick="OptiCorte.zoomSheet('${m.id}',0)" title="Restablecer zoom">100%</span>
+            <button class="nav-btn" onclick="OptiCorte.zoomSheet('${m.id}',1.25)" title="Acercar">+</button>
+          </div>
+          <div class="nav-sheets">
+            <button class="nav-btn" id="prev-${m.id}" onclick="OptiCorte.navSheet('${m.id}',-1)">‹</button>
+            <span class="nav-label" id="lbl-${m.id}"></span>
+            <button class="nav-btn" id="next-${m.id}" onclick="OptiCorte.navSheet('${m.id}',1)">›</button>
+          </div>
         </div>
       </div>
       <div class="viz-canvas" id="svg-${m.id}"></div>
@@ -1178,8 +1221,12 @@ function navSheet(matId,d){
 function buildSheetSVG(r,idx){
   const s=r.sheets[idx];
   const maxW=720, scale=maxW/r.L, h=r.W*scale;
-  const ns='http://www.w3.org/2000/svg';
-  let svg=`<svg viewBox="0 0 ${maxW} ${h}" xmlns="${ns}" font-family="Inter,sans-serif">`;
+  const padL=32, padT=22, ns='http://www.w3.org/2000/svg';
+  let svg=`<svg viewBox="0 0 ${maxW+padL} ${h+padT}" xmlns="${ns}" font-family="Inter,sans-serif">`;
+  // cotas generales de la chapa
+  svg+=`<text x="${padL+maxW/2}" y="13" fill="#69768B" font-size="12.5" font-weight="700" text-anchor="middle">◄ ${fmt(r.L)} mm ►</text>`;
+  svg+=`<text x="12" y="${padT+h/2}" fill="#69768B" font-size="12.5" font-weight="700" text-anchor="middle" transform="rotate(-90 12 ${padT+h/2})">◄ ${fmt(r.W)} mm ►</text>`;
+  svg+=`<g transform="translate(${padL},${padT})">`;
   svg+=`<rect x="0" y="0" width="${maxW}" height="${h}" fill="#fff" stroke="#D2DAE8" stroke-width="1.5"/>`;
   // margen guía
   const mx=r.margen*scale;
@@ -1201,15 +1248,23 @@ function buildSheetSVG(r,idx){
       svg+=`<text x="${x+w/2}" y="${y+hh/2+11}" fill="#fff" font-size="9" fill-opacity="0.85" text-anchor="middle" dominant-baseline="middle">${p.w}×${p.h}${p.rot?' ⟳':''}</text>`;
     }
   });
-  svg+=`</svg>`;
+  svg+=`</g></svg>`;
   return svg;
 }
 function drawSheet(m){
   const r=m.result; if(!r)return; const idx=m.cur||0;
-  const el=$('svg-'+m.id); if(el) el.innerHTML=buildSheetSVG(r,idx);
+  const el=$('svg-'+m.id); if(el){ el.innerHTML=buildSheetSVG(r,idx);
+    const z=m.zoom||1, svgEl=el.querySelector('svg');
+    if(svgEl){ svgEl.style.width=(z*100)+'%'; svgEl.style.maxWidth=z>1?'none':'100%'; } }
   const lbl=$('lbl-'+m.id); if(lbl) lbl.textContent=`Chapa ${idx+1} / ${r.sheets.length}`;
   const pv=$('prev-'+m.id), nx=$('next-'+m.id);
   if(pv) pv.disabled=idx<=0; if(nx) nx.disabled=idx>=r.sheets.length-1;
+  const zl=$('zoom-'+m.id); if(zl) zl.textContent=Math.round((m.zoom||1)*100)+'%';
+}
+function zoomSheet(matId,factor){
+  const m=state.chapas.mats.find(x=>x.id===matId); if(!m)return;
+  m.zoom = factor===0 ? 1 : Math.max(1,Math.min(4,(m.zoom||1)*factor));
+  drawSheet(m);
 }
 
 /* ===================== ALGORITMO 1D — FFD ===================== */
@@ -1584,25 +1639,25 @@ function saveJob(){
     id: ot.toLowerCase(),
     savedAt: Date.now(),
     project:$('projectName').value, ot, oc:$('meta-oc').value.trim(), cliente:$('meta-cliente').value.trim(),
-    chapas:{ mats: state.chapas.mats.map(m=>({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,espesorMM:m.espesorMM,densidad:m.densidad,precioM2:m.precioM2,piezas:m.piezas.map(p=>({...p}))})) },
+    chapas:{ mats: state.chapas.mats.map(m=>({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,veta:m.veta,espesorMM:m.espesorMM,densidad:m.densidad,precioM2:m.precioM2,piezas:m.piezas.map(p=>({...p}))})) },
     canos:{ mats: state.canos.mats.map(m=>({color:m.color,largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,kgM:m.kgM,precioM:m.precioM,cortes:m.cortes.map(c=>({...c}))})) }
   };
   const jobs=getJobs();
   const idx=jobs.findIndex(x=>x.id===job.id);
   const overwrite=idx>=0;
   if(overwrite) jobs[idx]=job; else jobs.unshift(job);
-  if(setJobs(jobs)){ updateJobsCount(); toast(overwrite?('OT '+ot+' actualizada'):('OT '+ot+' guardada'),'ok'); }
+  if(setJobs(jobs)){ updateJobsCount(); clearDirty(); toast(overwrite?('OT '+ot+' actualizada'):('OT '+ot+' guardada'),'ok'); }
 }
 
 function newJob(){
-  if(!confirm('¿Empezar una nueva OT? Se borrarán los datos actuales que no hayas guardado.')) return;
+  if(!confirmDiscard('empezás una nueva OT')) return;
   $('projectName').value='Proyecto sin título';
-  $('meta-ot').value=''; $('meta-oc').value=''; $('meta-cliente').value='';
+  $('meta-ot').value=nextOtNumber(); $('meta-oc').value=''; $('meta-cliente').value='';
   chSeq=0; caSeq=0;
   state.chapas.mats=[newChMat()]; state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult();
   state.canos.mats=[newCaMat()]; state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult();
-  switchTab('chapas');
-  toast('Nueva OT iniciada','ok');
+  switchTab('chapas'); clearDirty();
+  toast('Nueva OT '+$('meta-ot').value+' iniciada','ok');
 }
 
 function openJobs(){ const s=$('jobs-search'); if(s) s.value=''; renderJobsList(); $('jobs-modal').classList.remove('hidden'); if(s) setTimeout(()=>s.focus(),60); }
@@ -1645,12 +1700,13 @@ function renderJobsList(filter){
 
 function loadJob(id){
   const j=getJobs().find(x=>x.id===id); if(!j){ toast('OT no encontrada','err'); return; }
+  if(!confirmDiscard('cargás otra OT')) return;
   $('projectName').value=j.project||'';
   $('meta-ot').value=j.ot||''; $('meta-oc').value=j.oc||''; $('meta-cliente').value=j.cliente||'';
   const ch=j.chapas||{}, ca=j.canos||{};
   // compatibilidad: formato viejo (un solo material) o nuevo (mats[])
   const chMats=(ch.mats&&ch.mats.length)?ch.mats:(ch.piezas?[ch]:[]);
-  state.chapas.mats = chMats.length? chMats.map(m=>newChMat({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,espesorMM:m.espesorMM,densidad:m.densidad,precioM2:m.precioM2,piezas:(m.piezas||[]).map(p=>({...p}))})) : [newChMat()];
+  state.chapas.mats = chMats.length? chMats.map(m=>newChMat({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,veta:m.veta,espesorMM:m.espesorMM,densidad:m.densidad,precioM2:m.precioM2,piezas:(m.piezas||[]).map(p=>({...p}))})) : [newChMat()];
   state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats();
   const caMats=(ca.mats&&ca.mats.length)?ca.mats:(ca.cortes?[ca]:[]);
   state.canos.mats = caMats.length? caMats.map(m=>newCaMat({color:m.color,largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,kgM:m.kgM,precioM:m.precioM,cortes:(m.cortes||[]).map(c=>({...c}))})) : [newCaMat()];
@@ -1659,6 +1715,7 @@ function loadJob(id){
   // recalcular para mostrar resultados ya hechos
   if(state.chapas.mats.some(m=>m.piezas.length)) calcularChapas(); else renderChapasResult();
   if(state.canos.mats.some(m=>m.cortes.length)) calcularCanos(); else renderCanosResult();
+  clearDirty();
   toast('OT '+(j.ot||'')+' cargada','ok');
 }
 
@@ -1708,7 +1765,7 @@ function importPaste(){
     if($('paste-replace').checked) caM().cortes=rows; else caM().cortes.push(...rows);
     caM().result=null; renderCortes(); renderCanosResult();
   }
-  closePaste();
+  markDirty(); closePaste();
   toast(`${rows.length} fila(s) importada(s)${skipped?(' · '+skipped+' omitida(s)'):''}`,'ok');
 }
 
@@ -1749,6 +1806,34 @@ function print(mode){          // mode: 'all' | 'route' | 'diagram'
   closePrintMenu();
   const isChapas = state.activeTab==='chapas';
   const mats = isChapas ? state.chapas.mats : state.canos.mats;
+  const otNum = $('meta-ot').value.trim();
+
+  if(mode==='labels'){
+    const labels=[];
+    mats.forEach((m,mi)=>{
+      const items = isChapas ? m.piezas : m.cortes;
+      const matLbl = isChapas ? chLabel(m,mi) : caLabel(m,mi);
+      items.forEach(it=>{
+        const largo=parseFloat(it.largo); if(!(largo>0)) return;
+        if(isChapas && !(parseFloat(it.ancho)>0)) return;
+        const cant=parseInt(it.cant)||1;
+        const dim = isChapas ? `${it.largo} × ${it.ancho} mm` : `${it.largo} mm`;
+        for(let k=1;k<=cant;k++) labels.push({code:it.codigo||'(s/cód)',dim,mat:matLbl,color:m.color,seq:cant>1?`${k}/${cant}`:''});
+      });
+    });
+    if(!labels.length){ toast('No hay piezas/cortes para etiquetar en esta pestaña','err'); return; }
+    $('labels-sheet').innerHTML = labels.map(l=>
+      `<div class="label-card" style="border-left-color:${l.color}">
+         <div class="lc-top"><span class="lc-code">${esc(l.code)}</span><span class="lc-seq">${l.seq}</span></div>
+         <div class="lc-dim">${esc(l.dim)}</div>
+         <div class="lc-meta">${esc(l.mat)}${otNum?(' · OT '+esc(otNum)):''}</div>
+       </div>`).join('');
+    document.body.classList.remove('pm-all','pm-diagram','pm-route','pm-labels');
+    document.body.classList.add('pm-labels');
+    setTimeout(()=>window.print(), 80);
+    return;
+  }
+
   if(!mats.some(m=>m.result)){ toast('Primero calculá una optimización en esta pestaña','err'); return; }
 
   // chapas: para diagrama/todo, renderizar TODAS las chapas de cada material
@@ -1844,12 +1929,14 @@ function init(){
   // cerrar menú imprimir al hacer clic fuera
   document.addEventListener('click', e=>{ if(!e.target.closest('.print-menu')) closePrintMenu(); });
   // limpiar modo de impresión al terminar
-  window.addEventListener('afterprint', ()=>document.body.classList.remove('pm-all','pm-diagram','pm-route'));
+  window.addEventListener('afterprint', ()=>document.body.classList.remove('pm-all','pm-diagram','pm-route','pm-labels'));
 
   // OTs guardadas
   updateJobsCount();
   $('jobs-modal').addEventListener('click', e=>{ if(e.target.id==='jobs-modal') closeJobs(); });
   $('paste-modal').addEventListener('click', e=>{ if(e.target.id==='paste-modal') closePaste(); });
+  ['projectName','meta-ot','meta-oc','meta-cliente'].forEach(id=>$(id).addEventListener('input',markDirty));
+  window.addEventListener('beforeunload', e=>{ if(isDirty){ e.preventDefault(); e.returnValue=''; } });
   // precarga materiales de ejemplo
   state.chapas.mats=[ newChMat({ espesor:'2 mm DD C.16', piezas:[
     {codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
@@ -1863,12 +1950,13 @@ function init(){
     {codigo:'LARGUERO',largo:2400,cant:4},
     {codigo:'REFUERZO',largo:480,cant:10} ] }) ];
   state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats();
+  clearDirty();
 }
 init();
 
 return { switchTab, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
          chField, caField, selChMat, selCaMat,
-         calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
+         calcularChapas, calcularCanos, navSheet, zoomSheet, exportExcel, exportPDF,
          login, logout, print, togglePrintMenu,
          saveJob, openJobs, closeJobs, loadJob, deleteJob, newJob, filterJobs,
          openPaste, closePaste, importPaste, exportJobsFile, importJobsFile };
