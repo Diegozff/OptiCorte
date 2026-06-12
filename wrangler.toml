@@ -1,0 +1,7 @@
+name = "opticorte"
+compatibility_date = "2025-09-01"
+
+# Sitio 100% estático: no hay Worker script, solo se sirven los archivos de ./public
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
