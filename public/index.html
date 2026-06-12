@@ -145,6 +145,13 @@ input{font-family:inherit}
 .modal-head h3 svg{width:20px;height:20px;color:var(--orange)}
 .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface-alt);color:var(--text-secondary);font-size:16px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
 .modal-close:hover{background:var(--danger-light);color:var(--danger)}
+.jobs-searchbar{position:relative;padding:14px 18px 4px}
+.jobs-searchbar svg{position:absolute;left:31px;top:50%;transform:translateY(-30%);width:17px;height:17px;color:#9aa4b6}
+.jobs-searchbar input{
+  width:100%;padding:11px 14px 11px 40px;font-size:14px;font-weight:500;color:var(--text);
+  border:1.5px solid var(--border-strong);border-radius:10px;background:var(--surface-alt);transition:.15s;
+}
+.jobs-searchbar input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
 .modal-body{padding:14px 18px;overflow-y:auto}
 .jobs-empty{text-align:center;color:var(--text-secondary);padding:46px 20px;font-size:14px}
 .job-row{
@@ -598,6 +605,10 @@ input{font-family:inherit}
   <div class="meta-field oc"><label>N° OC</label><input id="meta-oc" type="text" placeholder="—" spellcheck="false"></div>
   <div class="meta-field cliente"><label>Cliente</label><input id="meta-cliente" type="text" placeholder="Nombre del cliente" spellcheck="false"></div>
   <div class="meta-actions">
+    <button class="btn-meta" onclick="OptiCorte.newJob()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15h6"/></svg>
+      Nueva OT
+    </button>
     <button class="btn-meta save" onclick="OptiCorte.saveJob()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
       Guardar OT
@@ -729,6 +740,10 @@ input{font-family:inherit}
         OTs guardadas
       </h3>
       <button class="modal-close" onclick="OptiCorte.closeJobs()">✕</button>
+    </div>
+    <div class="jobs-searchbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="jobs-search" type="text" placeholder="Buscar por N° OT, cliente o proyecto…" spellcheck="false" oninput="OptiCorte.filterJobs(this.value)">
     </div>
     <div class="modal-body" id="jobs-list"></div>
   </div>
@@ -1436,13 +1451,33 @@ function saveJob(){
   if(setJobs(jobs)){ updateJobsCount(); toast(overwrite?('OT '+ot+' actualizada'):('OT '+ot+' guardada'),'ok'); }
 }
 
-function openJobs(){ renderJobsList(); $('jobs-modal').classList.remove('hidden'); }
-function closeJobs(){ $('jobs-modal').classList.add('hidden'); }
+function newJob(){
+  if(!confirm('¿Empezar una nueva OT? Se borrarán los datos actuales que no hayas guardado.')) return;
+  $('projectName').value='Proyecto sin título';
+  $('meta-ot').value=''; $('meta-oc').value=''; $('meta-cliente').value='';
+  chSeq=0; caSeq=0;
+  state.chapas.mats=[newChMat()]; state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult();
+  state.canos.mats=[newCaMat()]; state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult();
+  switchTab('chapas');
+  toast('Nueva OT iniciada','ok');
+}
 
-function renderJobsList(){
-  const jobs=getJobs().sort((a,b)=>b.savedAt-a.savedAt);
+function openJobs(){ const s=$('jobs-search'); if(s) s.value=''; renderJobsList(); $('jobs-modal').classList.remove('hidden'); if(s) setTimeout(()=>s.focus(),60); }
+function closeJobs(){ $('jobs-modal').classList.add('hidden'); }
+function filterJobs(q){ renderJobsList(q); }
+
+function renderJobsList(filter){
+  filter=(filter||'').trim().toLowerCase();
+  let jobs=getJobs().sort((a,b)=>b.savedAt-a.savedAt);
+  const total=jobs.length;
+  if(filter) jobs=jobs.filter(j=> (j.ot||'').toLowerCase().includes(filter) || (j.cliente||'').toLowerCase().includes(filter) || (j.project||'').toLowerCase().includes(filter) );
   const cont=$('jobs-list');
-  if(!jobs.length){ cont.innerHTML='<div class="jobs-empty">📁 No hay OTs guardadas todavía.<br>Completá los datos del trabajo y presioná <strong>Guardar OT</strong>.</div>'; return; }
+  if(!jobs.length){
+    cont.innerHTML = total
+      ? `<div class="jobs-empty">🔍 Sin resultados para “${esc(filter)}”.<br>Probá con otro N° OT, cliente o proyecto.</div>`
+      : '<div class="jobs-empty">📁 No hay OTs guardadas todavía.<br>Completá los datos del trabajo y presioná <strong>Guardar OT</strong>.</div>';
+    return;
+  }
   cont.innerHTML = jobs.map(j=>{
     const d=new Date(j.savedAt).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const chMats=(j.chapas&&j.chapas.mats)?j.chapas.mats:(j.chapas&&j.chapas.piezas?[j.chapas]:[]);
@@ -1620,7 +1655,7 @@ return { switchTab, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte
          chField, caField, selChMat, selCaMat,
          calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
          login, logout, print, togglePrintMenu,
-         saveJob, openJobs, closeJobs, loadJob, deleteJob };
+         saveJob, openJobs, closeJobs, loadJob, deleteJob, newJob, filterJobs };
 })();
 </script>
 </body>
