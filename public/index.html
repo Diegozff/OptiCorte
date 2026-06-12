@@ -325,6 +325,47 @@ input{font-family:inherit}
 .btn-logout svg{width:17px;height:17px}
 #app-shell.hidden{display:none}
 
+/* ===== MENÚ IMPRIMIR ===== */
+.print-menu{position:relative}
+.print-dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;min-width:230px;
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--shadow-lg);padding:6px;z-index:60;display:none;
+}
+.print-dropdown.show{display:block;animation:loginIn .15s}
+.print-dropdown .pd-head{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);font-weight:700;padding:6px 10px 4px}
+.print-dropdown button{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:10px 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text);
+}
+.print-dropdown button:hover{background:var(--blue-light);color:var(--blue)}
+.print-dropdown button svg{width:16px;height:16px;flex-shrink:0;color:var(--text-secondary)}
+.print-dropdown button:hover svg{color:var(--blue)}
+
+/* ===== IMPRESIÓN ===== */
+.print-only{display:none}
+#print-header{display:none}
+@media print{
+  @page{ margin:13mm; }
+  body{ background:#fff !important; }
+  #login-screen,.header,.tabbar,.toast,.panel-left{ display:none !important; }
+  #print-header{ display:block !important; margin-bottom:12px; }
+  .workspace{ display:block !important; padding:0 !important; }
+  .workspace:not(.active){ display:none !important; }
+  .panel-right{ width:100% !important; gap:10px !important; }
+  .card{ box-shadow:none !important; border:1px solid #cdd4e0 !important; break-inside:avoid; }
+  .viz-head .nav-sheets{ display:none !important; }
+  #ch-svg{ display:none !important; }
+  .print-only{ display:block !important; }
+  .viz-canvas{ background:#fff !important; padding:10px !important; }
+  .kpi{ break-inside:avoid; }
+  .tbl-result tbody tr:hover{ background:inherit !important; }
+  .seq-chip{ break-inside:avoid }
+  /* modos */
+  body.pm-diagram .print-route, body.pm-diagram .kpi-row{ display:none !important; }
+  body.pm-route .print-diagram, body.pm-route .kpi-row{ display:none !important; }
+}
+
 @media (max-width:1320px){
   .panel-left{width:340px}
   .kpi .k-value{font-size:26px}
@@ -412,6 +453,27 @@ input{font-family:inherit}
     <input id="projectName" type="text" value="Proyecto sin título" spellcheck="false">
   </div>
   <div class="header-actions">
+    <div class="print-menu">
+      <button class="btn btn-ghost" onclick="event.stopPropagation();OptiCorte.togglePrintMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir <span style="font-size:10px;opacity:.7">▾</span>
+      </button>
+      <div class="print-dropdown" id="print-dropdown">
+        <div class="pd-head">Imprimir de esta pestaña</div>
+        <button onclick="OptiCorte.print('all')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          Imprimir todo
+        </button>
+        <button onclick="OptiCorte.print('route')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M8 12h8M8 16h5"/></svg>
+          Solo hoja de ruta
+        </button>
+        <button onclick="OptiCorte.print('diagram')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>
+          Solo diagrama de corte
+        </button>
+      </div>
+    </div>
     <button class="btn btn-excel" onclick="OptiCorte.exportExcel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13l6 6M15 13l-6 6"/></svg>
       Exportar Excel
@@ -432,6 +494,20 @@ input{font-family:inherit}
     </button>
   </div>
 </header>
+
+<div id="print-header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E6FD9;padding-bottom:7px">
+    <div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em"><span style="color:#1E6FD9">Opti</span><span style="color:#F58220">Corte</span></div>
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#69768B;font-weight:600;margin-top:2px">Software de Optimización Industrial</div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:#69768B">
+      <div id="print-proj" style="font-weight:700;color:#1B2535;font-size:13px"></div>
+      <div id="print-date" style="margin-top:2px"></div>
+    </div>
+  </div>
+  <div id="print-section" style="font-weight:700;font-size:13px;margin-top:9px;color:#1E6FD9"></div>
+</div>
 
 <nav class="tabbar">
   <button class="tab active" data-tab="chapas" onclick="OptiCorte.switchTab('chapas')">
@@ -756,7 +832,7 @@ function renderChapasResult(){
   }
 
   // viz
-  html+=`<div class="card">
+  html+=`<div class="card print-diagram">
     <div class="viz-head"><h3>Visualización de Nesting</h3>
       <div class="nav-sheets">
         <button class="nav-btn" id="ch-prev" onclick="OptiCorte.navSheet(-1)">‹</button>
@@ -765,10 +841,11 @@ function renderChapasResult(){
       </div>
     </div>
     <div class="viz-canvas" id="ch-svg"></div>
+    <div id="ch-print" class="print-only" style="padding:10px"></div>
   </div>`;
 
   // tabla detalle
-  html+=`<div class="card">
+  html+=`<div class="card print-route">
     <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa</h3></div>
     <table class="tbl-result"><thead><tr><th>Chapa N°</th><th>Pieza / Código</th><th>Dimensiones</th><th>Cant. en chapa</th></tr></thead><tbody>`;
   r.sheets.forEach((s,si)=>{
@@ -911,11 +988,11 @@ function renderCanosResult(){
   }
 
   // viz barras
-  html+=`<div class="card"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte por Barra</h3></div>
+  html+=`<div class="card print-diagram"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte por Barra</h3></div>
     <div class="card-body" id="ca-svg" style="display:flex;flex-direction:column;gap:14px"></div></div>`;
 
   // hoja de ruta con agrupación de patrones
-  html+=`<div class="card"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta</h3></div>
+  html+=`<div class="card print-route"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta</h3></div>
     <table class="tbl-result"><thead><tr><th>Barra N°</th><th>Secuencia de cortes</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
   let i=0;
   while(i<r.bars.length){
@@ -1113,6 +1190,38 @@ async function exportPDF(){
   toast('PDF exportado','ok');
 }
 
+/* ===================== IMPRIMIR ===================== */
+function togglePrintMenu(){ $('print-dropdown').classList.toggle('show'); }
+function closePrintMenu(){ $('print-dropdown').classList.remove('show'); }
+
+function print(mode){          // mode: 'all' | 'route' | 'diagram'
+  closePrintMenu();
+  const isChapas = state.activeTab==='chapas';
+  const res = isChapas ? state.chapas.result : state.canos.result;
+  if(!res){ toast('Primero calculá una optimización en esta pestaña','err'); return; }
+
+  // chapas: para diagrama/todo, renderizar TODAS las chapas (no solo la visible)
+  if(isChapas && mode!=='route'){
+    const cont=$('ch-print');
+    if(cont) cont.innerHTML = res.sheets.map((s,i)=>
+      `<div style="margin-bottom:14px;break-inside:avoid">
+         <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:4px">Chapa #${i+1} — ${res.L}×${res.W} mm (${esc(res.esp||'')})</div>
+         ${buildSheetSVG(i)}
+       </div>`).join('');
+  }
+
+  // encabezado de impresión
+  const tabName = isChapas ? 'Chapas — Optimización 2D' : 'Caños / Perfiles — Optimización 1D';
+  const secLabel = { all:'Documento completo', route:'Hoja de ruta', diagram:'Diagrama de corte' }[mode];
+  $('print-proj').textContent = $('projectName').value;
+  $('print-date').textContent = new Date().toLocaleDateString('es-AR');
+  $('print-section').textContent = tabName + '  ·  ' + secLabel;
+
+  document.body.classList.remove('pm-all','pm-diagram','pm-route');
+  document.body.classList.add('pm-'+mode);
+  setTimeout(()=>window.print(), 80);
+}
+
 /* ===================== AUTENTICACIÓN (cliente) ===================== */
 /* ⚠ Login simple del lado del cliente. Editá usuarios y contraseñas acá.
    No es seguridad real (las credenciales viajan en el código). Para acceso
@@ -1176,6 +1285,11 @@ function checkSession(){
 /* ===================== INIT ===================== */
 function init(){
   checkSession();
+
+  // cerrar menú imprimir al hacer clic fuera
+  document.addEventListener('click', e=>{ if(!e.target.closest('.print-menu')) closePrintMenu(); });
+  // limpiar modo de impresión al terminar
+  window.addEventListener('afterprint', ()=>document.body.classList.remove('pm-all','pm-diagram','pm-route'));
   // precarga piezas (2D)
   [{codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
    {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
@@ -1193,7 +1307,7 @@ init();
 
 return { switchTab, dirty, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
          calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF,
-         login, logout };
+         login, logout, print, togglePrintMenu };
 })();
 </script>
 </body>
