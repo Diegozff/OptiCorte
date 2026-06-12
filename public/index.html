@@ -100,6 +100,25 @@ input{font-family:inherit}
 .btn-pdf:hover{background:#d6422f}
 .btn svg{width:16px;height:16px}
 
+/* ===== BARRA DE DATOS DEL TRABAJO ===== */
+.meta-bar{
+  display:flex;align-items:center;gap:18px;
+  padding:10px 24px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.meta-bar .mb-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em}
+.meta-bar .mb-title svg{width:16px;height:16px;color:var(--orange)}
+.meta-field{display:flex;align-items:center;gap:8px}
+.meta-field label{font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.meta-field input{
+  background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:7px 11px;font-size:13px;font-weight:600;color:var(--text);transition:.15s;
+}
+.meta-field input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
+.meta-field.ot input,.meta-field.oc input{width:120px}
+.meta-field.cliente{flex:1}
+.meta-field.cliente input{width:100%;min-width:160px}
+
 /* ===== TABS ===== */
 .tabbar{
   display:flex;gap:6px;padding:16px 24px 0;
@@ -348,7 +367,7 @@ input{font-family:inherit}
 @media print{
   @page{ margin:13mm; }
   body{ background:#fff !important; }
-  #login-screen,.header,.tabbar,.toast,.panel-left{ display:none !important; }
+  #login-screen,.header,.meta-bar,.tabbar,.toast,.panel-left{ display:none !important; }
   #print-header{ display:block !important; margin-bottom:12px; }
   .workspace{ display:block !important; padding:0 !important; }
   .workspace:not(.active){ display:none !important; }
@@ -495,7 +514,17 @@ input{font-family:inherit}
   </div>
 </header>
 
-<div id="print-header">
+<div class="meta-bar">
+  <span class="mb-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+    Datos del trabajo
+  </span>
+  <div class="meta-field ot"><label>N° OT</label><input id="meta-ot" type="text" placeholder="—" spellcheck="false"></div>
+  <div class="meta-field oc"><label>N° OC</label><input id="meta-oc" type="text" placeholder="—" spellcheck="false"></div>
+  <div class="meta-field cliente"><label>Cliente</label><input id="meta-cliente" type="text" placeholder="Nombre del cliente" spellcheck="false"></div>
+</div>
+
+<div id="print-header"
   <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E6FD9;padding-bottom:7px">
     <div>
       <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em"><span style="color:#1E6FD9">Opti</span><span style="color:#F58220">Corte</span></div>
@@ -506,7 +535,12 @@ input{font-family:inherit}
       <div id="print-date" style="margin-top:2px"></div>
     </div>
   </div>
-  <div id="print-section" style="font-weight:700;font-size:13px;margin-top:9px;color:#1E6FD9"></div>
+  <div id="print-meta" style="display:flex;gap:26px;font-size:11.5px;color:#1B2535;margin-top:8px">
+    <div><b>N° OT:</b> <span id="print-ot">—</span></div>
+    <div><b>N° OC:</b> <span id="print-oc">—</span></div>
+    <div><b>Cliente:</b> <span id="print-cliente">—</span></div>
+  </div>
+  <div id="print-section" style="font-weight:700;font-size:13px;margin-top:8px;color:#1E6FD9"></div>
 </div>
 
 <nav class="tabbar">
@@ -1052,8 +1086,9 @@ function buildBarSVG(bar,idx){
 function exportExcel(){
   if(typeof XLSX==='undefined'){ toast('SheetJS no cargó (sin conexión)','err'); return; }
   const proj=$('projectName').value, fecha=new Date().toLocaleDateString('es-AR');
+  const ot=$('meta-ot').value.trim()||'—', oc=$('meta-oc').value.trim()||'—', cliente=$('meta-cliente').value.trim()||'—';
   const wb=XLSX.utils.book_new();
-  const head=[['OptiCorte v1.0 — Optimización Industrial'],['Proyecto:',proj],['Fecha:',fecha],[]];
+  const head=[['OptiCorte v1.0 — Optimización Industrial'],['Proyecto:',proj],['N° OT:',ot],['N° OC:',oc],['Cliente:',cliente],['Fecha:',fecha],[]];
 
   // Hoja Resumen
   const resumen=[...head,['RESUMEN DE MATERIALES'],['Tipo','Dimensión / Descripción','Cantidad','Aprovechamiento %']];
@@ -1105,6 +1140,7 @@ async function exportPDF(){
   const { jsPDF }=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const proj=$('projectName').value, fecha=new Date().toLocaleDateString('es-AR');
+  const ot=$('meta-ot').value.trim()||'—', oc=$('meta-oc').value.trim()||'—', cliente=$('meta-cliente').value.trim()||'—';
   const PW=210, M=14; let y=0;
   toast('Generando PDF…');
 
@@ -1118,7 +1154,11 @@ async function exportPDF(){
     doc.setFontSize(9); doc.setTextColor(255,255,255);
     doc.text(proj,PW-M,9,{align:'right'});
     doc.setFontSize(7.5); doc.text(fecha+'  ·  v1.0',PW-M,14,{align:'right'});
-    y=28;
+    // franja de datos del trabajo
+    doc.setTextColor(90,100,115); doc.setFont('helvetica','normal'); doc.setFontSize(8.2);
+    doc.text(`N° OT: ${ot}      N° OC: ${oc}      Cliente: ${cliente}`,M,26);
+    doc.setDrawColor(205,212,224); doc.setLineWidth(.2); doc.line(M,29,PW-M,29);
+    y=34;
   }
   function checkPage(need){ if(y+need>282){ footer(); doc.addPage(); header(); } }
   let pageNo=1;
@@ -1215,6 +1255,9 @@ function print(mode){          // mode: 'all' | 'route' | 'diagram'
   const secLabel = { all:'Documento completo', route:'Hoja de ruta', diagram:'Diagrama de corte' }[mode];
   $('print-proj').textContent = $('projectName').value;
   $('print-date').textContent = new Date().toLocaleDateString('es-AR');
+  $('print-ot').textContent = $('meta-ot').value.trim() || '—';
+  $('print-oc').textContent = $('meta-oc').value.trim() || '—';
+  $('print-cliente').textContent = $('meta-cliente').value.trim() || '—';
   $('print-section').textContent = tabName + '  ·  ' + secLabel;
 
   document.body.classList.remove('pm-all','pm-diagram','pm-route');
