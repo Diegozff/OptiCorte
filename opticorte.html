@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OptiCorte — Optimización Industrial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F5F7FB;
+  --surface:#FFFFFF;
+  --surface-alt:#F2F5FA;
+  --border:#E4E9F2;
+  --border-strong:#D2DAE8;
+  --blue:#1E6FD9;
+  --blue-dark:#1557B0;
+  --blue-light:#EAF1FC;
+  --orange:#F58220;
+  --orange-dark:#E06A0A;
+  --orange-light:#FFF2E6;
+  --text:#1B2535;
+  --text-secondary:#69768B;
+  --success:#2ECC71;
+  --success-light:#E7F9F0;
+  --danger:#E74C3C;
+  --danger-light:#FDECEA;
+  --grad:linear-gradient(135deg,#1E6FD9 0%,#2E86E0 45%,#F58220 100%);
+  --grad-btn:linear-gradient(135deg,#1E6FD9 0%,#1557B0 100%);
+  --grad-orange:linear-gradient(135deg,#F58220 0%,#E06A0A 100%);
+  --shadow-sm:0 1px 2px rgba(27,37,53,.06),0 1px 3px rgba(27,37,53,.05);
+  --shadow:0 4px 16px rgba(27,37,53,.08);
+  --shadow-lg:0 12px 32px rgba(27,37,53,.12);
+  --radius:12px;
+  --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Plus Jakarta Sans','Inter',sans-serif;font-weight:700;letter-spacing:-.01em}
+.muted{color:var(--text-secondary)}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input{font-family:inherit}
+
+/* ===== HEADER ===== */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:20px;
+  padding:0 24px;height:64px;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo-svg{width:42px;height:42px;flex-shrink:0}
+.brand-text{display:flex;flex-direction:column;line-height:1}
+.brand-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.02em}
+.brand-name .blue{color:var(--blue)}
+.brand-name .orange{color:var(--orange)}
+.brand-tag{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);font-weight:600;margin-top:3px}
+.badge{
+  font-size:11px;font-weight:700;color:#fff;
+  background:var(--grad-orange);
+  padding:3px 9px;border-radius:20px;letter-spacing:.03em;
+  box-shadow:var(--shadow-sm);
+}
+.project-wrap{display:flex;align-items:center;gap:8px;margin-left:8px}
+.project-wrap label{font-size:12px;color:var(--text-secondary);font-weight:500}
+#projectName{
+  background:var(--surface-alt);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:8px 12px;font-size:14px;font-weight:600;color:var(--text);
+  min-width:220px;transition:.15s;
+}
+#projectName:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
+.header-actions{margin-left:auto;display:flex;gap:10px}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;transition:.15s;
+  box-shadow:var(--shadow-sm);white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{background:var(--surface);border:1px solid var(--border-strong);color:var(--text)}
+.btn-ghost:hover{background:var(--surface-alt);border-color:var(--blue);color:var(--blue)}
+.btn-excel{background:var(--success);color:#fff}
+.btn-excel:hover{background:#27ae60}
+.btn-pdf{background:var(--danger);color:#fff}
+.btn-pdf:hover{background:#d6422f}
+.btn svg{width:16px;height:16px}
+
+/* ===== TABS ===== */
+.tabbar{
+  display:flex;gap:6px;padding:16px 24px 0;
+}
+.tab{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 20px;border-radius:10px 10px 0 0;
+  font-weight:600;font-size:14px;color:var(--text-secondary);
+  background:transparent;transition:.15s;position:relative;
+}
+.tab:hover{color:var(--text);background:rgba(30,111,217,.05)}
+.tab.active{color:var(--blue);background:var(--surface);box-shadow:0 -2px 8px rgba(27,37,53,.05)}
+.tab.active::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:3px;background:var(--grad);border-radius:3px 3px 0 0}
+.tab .ico{font-size:16px}
+
+/* ===== LAYOUT ===== */
+.workspace{display:none;gap:20px;padding:20px 24px 40px;align-items:flex-start}
+.workspace.active{display:flex}
+.panel-left{width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;position:sticky;top:84px}
+.panel-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);
+  overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+}
+.card-head .dot{width:8px;height:8px;border-radius:50%;background:var(--grad-btn);flex-shrink:0}
+.card-head .dot.orange{background:var(--grad-orange)}
+.card-head h3{font-size:15px}
+.card-body{padding:18px}
+
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.field .row2{display:flex;gap:10px}
+.input{
+  width:100%;background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;color:var(--text);
+  transition:.15s;font-weight:500;
+}
+.input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+.input::-webkit-inner-spin-button{opacity:.4}
+
+/* editable table */
+.tbl-edit{width:100%;border-collapse:collapse;font-size:13px}
+.tbl-edit th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-secondary);font-weight:700;padding:6px 6px;border-bottom:1px solid var(--border)
+}
+.tbl-edit td{padding:4px 4px;border-bottom:1px solid var(--surface-alt)}
+.tbl-edit input[type=text],.tbl-edit input[type=number]{
+  width:100%;border:1px solid transparent;background:var(--surface-alt);
+  border-radius:6px;padding:7px 8px;font-size:13px;color:var(--text);font-weight:500;
+}
+.tbl-edit input:focus{outline:none;background:#fff;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-light)}
+.tbl-edit input[type=number]{text-align:right}
+.tbl-edit .col-chk{text-align:center;width:40px}
+.tbl-edit .col-del{width:30px}
+.chk{width:16px;height:16px;accent-color:var(--blue);cursor:pointer}
+.btn-del{
+  width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--danger);background:var(--danger-light);font-size:14px;font-weight:700;transition:.15s;
+}
+.btn-del:hover{background:var(--danger);color:#fff}
+.btn-add{
+  width:100%;margin-top:12px;padding:9px;border-radius:var(--radius-sm);
+  border:1.5px dashed var(--border-strong);color:var(--blue);font-weight:600;font-size:13px;
+  background:var(--surface);transition:.15s;
+}
+.btn-add:hover{border-color:var(--blue);background:var(--blue-light)}
+
+.btn-calc{
+  width:100%;padding:14px;border-radius:var(--radius-sm);
+  background:var(--grad-btn);color:#fff;font-weight:700;font-size:15px;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 6px 18px rgba(30,111,217,.32);transition:.15s;letter-spacing:.01em;
+}
+.btn-calc:hover{box-shadow:0 8px 24px rgba(30,111,217,.42);transform:translateY(-1px)}
+.btn-calc:active{transform:translateY(0)}
+.btn-calc.orange{background:var(--grad-orange);box-shadow:0 6px 18px rgba(245,130,32,.32)}
+.btn-calc.orange:hover{box-shadow:0 8px 24px rgba(245,130,32,.42)}
+
+/* ===== KPI ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--grad-btn)}
+.kpi.k-orange::before{background:var(--grad-orange)}
+.kpi.k-green::before{background:linear-gradient(135deg,#2ECC71,#27ae60)}
+.kpi.k-red::before{background:linear-gradient(135deg,#E74C3C,#c0392b)}
+.kpi .k-label{font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .k-value{font-family:'Plus Jakarta Sans',sans-serif;font-size:30px;font-weight:800;margin-top:6px;line-height:1;letter-spacing:-.02em}
+.kpi .k-sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
+
+/* viz */
+.viz-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.viz-head h3{font-size:15px}
+.nav-sheets{display:flex;align-items:center;gap:10px}
+.nav-btn{
+  width:34px;height:34px;border-radius:8px;background:var(--surface-alt);
+  display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;
+  color:var(--blue);transition:.15s;border:1px solid var(--border)
+}
+.nav-btn:hover:not(:disabled){background:var(--blue);color:#fff;border-color:var(--blue)}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.nav-label{font-size:13px;font-weight:600;min-width:90px;text-align:center}
+.viz-canvas{padding:20px;display:flex;justify-content:center;background:linear-gradient(180deg,#fbfcfe,#f5f7fb);min-height:200px}
+.viz-canvas svg{max-width:100%;height:auto;border-radius:8px}
+
+/* result tables */
+.tbl-result{width:100%;border-collapse:collapse;font-size:13px}
+.tbl-result th{
+  text-align:left;background:var(--surface-alt);color:var(--text-secondary);
+  font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+  padding:11px 14px;border-bottom:1px solid var(--border)
+}
+.tbl-result td{padding:10px 14px;border-bottom:1px solid var(--surface-alt)}
+.tbl-result tbody tr:nth-child(even){background:var(--surface-alt)}
+.tbl-result tbody tr:hover{background:var(--blue-light)}
+.tbl-result .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+.tbl-result .retazo-row td{background:var(--orange-light)!important;font-weight:600;color:var(--orange-dark)}
+.tbl-result .pattern-row td{background:var(--blue-light)!important;font-weight:600;color:var(--blue-dark);font-size:12px}
+.seq-chip{display:inline-block;background:var(--surface-alt);border:1px solid var(--border);border-radius:6px;padding:2px 7px;margin:2px 3px 2px 0;font-size:11.5px;font-weight:600}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;text-align:center;color:var(--text-secondary);
+}
+.empty-state svg{width:64px;height:64px;opacity:.5;margin-bottom:16px}
+.empty-state h3{font-size:17px;color:var(--text);margin-bottom:6px}
+.empty-state p{font-size:13px;max-width:340px}
+
+.alert{
+  background:var(--danger-light);border:1px solid #f5c6c0;border-left:4px solid var(--danger);
+  border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:0;
+}
+.alert h4{color:var(--danger);font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.alert ul{list-style:none;font-size:13px}
+.alert li{padding:3px 0;color:var(--text)}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:200;
+  background:var(--text);color:#fff;padding:14px 20px;border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-lg);font-size:14px;font-weight:600;
+  display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(20px);
+  transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:#1e8a4f}
+.toast.err{background:#c0392b}
+
+@media (max-width:1320px){
+  .panel-left{width:340px}
+  .kpi .k-value{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lgBlue" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2E86E0"/><stop offset="1" stop-color="#1557B0"/>
+        </linearGradient>
+        <linearGradient id="lgOrange" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#F9A04B"/><stop offset="1" stop-color="#E06A0A"/>
+        </linearGradient>
+      </defs>
+      <!-- chapa azul con cortes -->
+      <path d="M4 22 L30 14 L30 36 L4 44 Z" fill="url(#lgBlue)"/>
+      <path d="M11 23 L20 30 M22 19 L15 33 M26 25 L17 36" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+      <!-- caño naranja -->
+      <rect x="33" y="18" width="27" height="16" rx="3" fill="url(#lgOrange)" transform="rotate(-6 46 26)"/>
+      <ellipse cx="58" cy="25" rx="3.2" ry="8" fill="#C95A06" transform="rotate(-6 58 25)"/>
+      <path d="M37 23 h18 M37 28 h18" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".7" transform="rotate(-6 46 26)"/>
+    </svg>
+    <div class="brand-text">
+      <div class="brand-name"><span class="blue">Opti</span><span class="orange">Corte</span></div>
+      <div class="brand-tag">Software de Optimización Industrial</div>
+    </div>
+  </div>
+  <span class="badge">v1.0</span>
+  <div class="project-wrap">
+    <label for="projectName">Proyecto:</label>
+    <input id="projectName" type="text" value="Proyecto sin título" spellcheck="false">
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-excel" onclick="OptiCorte.exportExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13l6 6M15 13l-6 6"/></svg>
+      Exportar Excel
+    </button>
+    <button class="btn btn-pdf" onclick="OptiCorte.exportPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 15h8M8 18h5"/></svg>
+      Exportar PDF
+    </button>
+  </div>
+</header>
+
+<nav class="tabbar">
+  <button class="tab active" data-tab="chapas" onclick="OptiCorte.switchTab('chapas')">
+    <span class="ico">✂</span> CHAPAS — Optimización 2D
+  </button>
+  <button class="tab" data-tab="canos" onclick="OptiCorte.switchTab('canos')">
+    <span class="ico">⬛</span> CAÑOS / PERFILES — Optimización 1D
+  </button>
+</nav>
+
+<!-- ============ TAB CHAPAS ============ -->
+<main class="workspace active" id="ws-chapas">
+  <aside class="panel-left">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h3>Chapa Matriz</h3></div>
+      <div class="card-body">
+        <div class="field"><div class="row2">
+          <div style="flex:1"><label>Largo (mm)</label><input class="input" type="number" id="ch-largo" value="3000" oninput="OptiCorte.dirty('chapas')"></div>
+          <div style="flex:1"><label>Ancho (mm)</label><input class="input" type="number" id="ch-ancho" value="1500" oninput="OptiCorte.dirty('chapas')"></div>
+        </div></div>
+        <div class="field"><label>Espesor / Material</label><input class="input" type="text" id="ch-espesor" value="2 mm DD C.16" oninput="OptiCorte.dirty('chapas')"></div>
+        <div class="field"><div class="row2">
+          <div style="flex:1"><label>GAP piezas (mm)</label><input class="input" type="number" id="ch-gap" value="5" oninput="OptiCorte.dirty('chapas')"></div>
+          <div style="flex:1"><label>Margen borde (mm)</label><input class="input" type="number" id="ch-margen" value="10" oninput="OptiCorte.dirty('chapas')"></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="dot orange"></span><h3>Piezas a Cortar</h3></div>
+      <div class="card-body">
+        <table class="tbl-edit">
+          <thead><tr>
+            <th>Código</th><th>Largo</th><th>Ancho</th><th>Cant.</th>
+            <th class="col-chk" title="Rotación permitida">⟳</th><th class="col-del"></th>
+          </tr></thead>
+          <tbody id="piezas-body"></tbody>
+        </table>
+        <button class="btn-add" onclick="OptiCorte.addPieza()">+ Agregar Pieza</button>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="OptiCorte.calcularChapas()">⚙ CALCULAR OPTIMIZACIÓN</button>
+  </aside>
+
+  <section class="panel-right" id="chapas-results">
+    <div class="card"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 10h18M9 5v14"/></svg>
+      <h3>Sin resultados aún</h3>
+      <p>Configurá la chapa matriz y las piezas, luego presioná <strong>Calcular Optimización</strong> para ver el nesting.</p>
+    </div></div>
+  </section>
+</main>
+
+<!-- ============ TAB CAÑOS ============ -->
+<main class="workspace" id="ws-canos">
+  <aside class="panel-left">
+    <div class="card">
+      <div class="card-head"><span class="dot orange"></span><h3>Barra Comercial</h3></div>
+      <div class="card-body">
+        <div class="field"><label>Largo comercial (mm)</label><input class="input" type="number" id="ca-largo" value="6000" oninput="OptiCorte.dirty('canos')"></div>
+        <div class="field"><div class="row2">
+          <div style="flex:1"><label>Sangría / disco (mm)</label><input class="input" type="number" id="ca-sangria" value="3" oninput="OptiCorte.dirty('canos')"></div>
+          <div style="flex:1"><label>Sobrante útil mín. (mm)</label><input class="input" type="number" id="ca-reuse" value="200" oninput="OptiCorte.dirty('canos')"></div>
+        </div></div>
+        <div class="field"><label>Descripción del perfil</label><input class="input" type="text" id="ca-desc" value="Caño 40×40×2 St52" oninput="OptiCorte.dirty('canos')"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h3>Cortes Requeridos</h3></div>
+      <div class="card-body">
+        <table class="tbl-edit">
+          <thead><tr><th>Código</th><th>Largo (mm)</th><th>Cant.</th><th class="col-del"></th></tr></thead>
+          <tbody id="cortes-body"></tbody>
+        </table>
+        <button class="btn-add" onclick="OptiCorte.addCorte()">+ Agregar Corte</button>
+      </div>
+    </div>
+
+    <button class="btn-calc orange" onclick="OptiCorte.calcularCanos()">⚙ CALCULAR OPTIMIZACIÓN</button>
+  </aside>
+
+  <section class="panel-right" id="canos-results">
+    <div class="card"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>
+      <h3>Sin resultados aún</h3>
+      <p>Definí la barra comercial y los cortes requeridos, luego presioná <strong>Calcular Optimización</strong>.</p>
+    </div></div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const OptiCorte = (function(){
+
+const PALETTE = ['#1E6FD9','#F58220','#2ECC71','#9B59B6','#16A085','#E84393','#F1C40F','#0EA5E9','#EF5350','#475569'];
+
+const state = {
+  activeTab:'chapas',
+  chapas:{ piezas:[], result:null, currentSheet:0 },
+  canos:{ cortes:[], result:null }
+};
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const num = (id,def)=>{ const v=parseFloat($(id).value); return isNaN(v)?def:v; };
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => n.toLocaleString('es-AR',{maximumFractionDigits:1});
+
+function toast(msg,type){
+  const t=$('toast'); t.textContent=msg; t.className='toast show '+(type||'');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
+}
+
+function colorFor(code, map){
+  if(!(code in map)){ map[code]=PALETTE[Object.keys(map).length % PALETTE.length]; }
+  return map[code];
+}
+
+/* ---------- tab ---------- */
+function switchTab(tab){
+  state.activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.workspace').forEach(w=>w.classList.remove('active'));
+  $('ws-'+tab).classList.add('active');
+}
+
+function dirty(which){
+  // limpiar resultados previos al editar inputs (no recalcula automático)
+  if(which==='chapas' && state.chapas.result){ state.chapas.result=null; renderChapasEmpty(); }
+  if(which==='canos' && state.canos.result){ state.canos.result=null; renderCanosEmpty(); }
+}
+
+/* ===================== PIEZAS (2D) tabla ===================== */
+function addPieza(p){
+  state.chapas.piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true});
+  renderPiezas(); dirty('chapas');
+}
+function delPieza(i){ state.chapas.piezas.splice(i,1); renderPiezas(); dirty('chapas'); }
+function renderPiezas(){
+  const tb=$('piezas-body'); tb.innerHTML='';
+  state.chapas.piezas.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="text" value="${esc(p.codigo)}" oninput="OptiCorte.editPieza(${i},'codigo',this.value)"></td>
+      <td><input type="number" value="${p.largo}" oninput="OptiCorte.editPieza(${i},'largo',this.value)"></td>
+      <td><input type="number" value="${p.ancho}" oninput="OptiCorte.editPieza(${i},'ancho',this.value)"></td>
+      <td><input type="number" value="${p.cant}" oninput="OptiCorte.editPieza(${i},'cant',this.value)"></td>
+      <td class="col-chk"><input class="chk" type="checkbox" ${p.rot?'checked':''} onchange="OptiCorte.editPieza(${i},'rot',this.checked)"></td>
+      <td class="col-del"><button class="btn-del" onclick="OptiCorte.delPieza(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function editPieza(i,f,v){ state.chapas.piezas[i][f]= (f==='rot')?v:v; dirty('chapas'); }
+
+/* ===================== CORTES (1D) tabla ===================== */
+function addCorte(c){
+  state.canos.cortes.push(c||{codigo:'',largo:'',cant:1});
+  renderCortes(); dirty('canos');
+}
+function delCorte(i){ state.canos.cortes.splice(i,1); renderCortes(); dirty('canos'); }
+function renderCortes(){
+  const tb=$('cortes-body'); tb.innerHTML='';
+  state.canos.cortes.forEach((c,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="text" value="${esc(c.codigo)}" oninput="OptiCorte.editCorte(${i},'codigo',this.value)"></td>
+      <td><input type="number" value="${c.largo}" oninput="OptiCorte.editCorte(${i},'largo',this.value)"></td>
+      <td><input type="number" value="${c.cant}" oninput="OptiCorte.editCorte(${i},'cant',this.value)"></td>
+      <td class="col-del"><button class="btn-del" onclick="OptiCorte.delCorte(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function editCorte(i,f,v){ state.canos.cortes[i][f]=v; dirty('canos'); }
+
+/* ===================== ALGORITMO 2D — MaxRects (BSSF) ===================== */
+function rectsIntersect(a,b){
+  return !(b.x>=a.x+a.w || b.x+b.w<=a.x || b.y>=a.y+a.h || b.y+b.h<=a.y);
+}
+function pruneFree(free){
+  for(let i=0;i<free.length;i++){
+    for(let j=i+1;j<free.length;j++){
+      if(contained(free[i],free[j])){ free.splice(i,1); i--; break; }
+      if(contained(free[j],free[i])){ free.splice(j,1); j--; }
+    }
+  }
+}
+function contained(a,b){ // a contenido en b
+  return a.x>=b.x && a.y>=b.y && a.x+a.w<=b.x+b.w && a.y+a.h<=b.y+b.h;
+}
+function splitFree(free, used){
+  const result=[];
+  for(const f of free){
+    if(!rectsIntersect(f,used)){ result.push(f); continue; }
+    // overlap horizontal
+    if(used.x < f.x+f.w && used.x+used.w > f.x){
+      if(used.y > f.y && used.y < f.y+f.h) result.push({x:f.x,y:f.y,w:f.w,h:used.y-f.y});
+      if(used.y+used.h < f.y+f.h) result.push({x:f.x,y:used.y+used.h,w:f.w,h:f.y+f.h-(used.y+used.h)});
+    }
+    if(used.y < f.y+f.h && used.y+used.h > f.y){
+      if(used.x > f.x && used.x < f.x+f.w) result.push({x:f.x,y:f.y,w:used.x-f.x,h:f.h});
+      if(used.x+used.w < f.x+f.w) result.push({x:used.x+used.w,y:f.y,w:f.x+f.w-(used.x+used.w),h:f.h});
+    }
+  }
+  pruneFree(result);
+  return result;
+}
+
+function calcularChapas(){
+  const L=num('ch-largo',3000), W=num('ch-ancho',1500);
+  const gap=num('ch-gap',5), margen=num('ch-margen',10);
+  const esp=$('ch-espesor').value.trim();
+
+  // validación
+  if(L<=0||W<=0){ toast('Dimensiones de chapa inválidas','err'); return; }
+  const piezas=state.chapas.piezas.filter(p=>parseFloat(p.largo)>0 && parseFloat(p.ancho)>0 && parseInt(p.cant)>0);
+  if(!piezas.length){ toast('Agregá al menos una pieza válida','err'); return; }
+
+  const usableW=L-2*margen, usableH=W-2*margen;
+
+  // expandir instancias
+  let instances=[];
+  const noFit=[];
+  piezas.forEach(p=>{
+    const pw=parseFloat(p.largo), ph=parseFloat(p.ancho), q=parseInt(p.cant), rot=!!p.rot;
+    const code=p.codigo||('P'+(instances.length+1));
+    // cabe en la chapa bajo alguna orientación?
+    const fitsNormal = pw<=usableW && ph<=usableH;
+    const fitsRot = rot && ph<=usableW && pw<=usableH;
+    if(!fitsNormal && !fitsRot){ noFit.push({code,w:pw,h:ph,cant:q}); return; }
+    for(let k=0;k<q;k++) instances.push({code,w:pw,h:ph,rot,area:pw*ph});
+  });
+  instances.sort((a,b)=>b.area-a.area);
+
+  const sheets=[];
+  let remaining=instances.slice();
+
+  while(remaining.length){
+    const sheet={ free:[{x:margen,y:margen,w:usableW,h:usableH}], placed:[] };
+    let placedAny=true;
+    while(placedAny && remaining.length){
+      placedAny=false;
+      // elegir globalmente la mejor (pieza, rect, orientación) por Best Short Side Fit
+      let best=null;
+      for(let pi=0; pi<remaining.length; pi++){
+        const inst=remaining[pi];
+        const orients=[{w:inst.w,h:inst.h,rot:false}];
+        if(inst.rot) orients.push({w:inst.h,h:inst.w,rot:true});
+        for(const o of orients){
+          const fw=o.w+gap, fh=o.h+gap; // footprint con gap
+          for(const f of sheet.free){
+            if(fw<=f.w+1e-6 && fh<=f.h+1e-6){
+              const leftH=f.w-fw, leftV=f.h-fh;
+              const shortFit=Math.min(leftH,leftV), longFit=Math.max(leftH,leftV);
+              if(!best || shortFit<best.shortFit-1e-9 || (Math.abs(shortFit-best.shortFit)<1e-9 && longFit<best.longFit)){
+                best={pi,inst,o,f,fw,fh,shortFit,longFit};
+              }
+            }
+          }
+        }
+      }
+      if(best){
+        const used={x:best.f.x,y:best.f.y,w:best.fw,h:best.fh};
+        sheet.placed.push({code:best.inst.code,x:best.f.x,y:best.f.y,w:best.o.w,h:best.o.h,rot:best.o.rot});
+        sheet.free=splitFree(sheet.free,used);
+        remaining.splice(best.pi,1);
+        placedAny=true;
+      }
+    }
+    if(!sheet.placed.length) break; // seguridad
+    sheets.push(sheet);
+  }
+
+  // métricas
+  const sheetArea=L*W;
+  let totalPlacedArea=0, totalPlaced=0, totalReq=instances.length;
+  const colorMap={};
+  sheets.forEach(s=>{
+    s.placedArea=0;
+    s.placed.forEach(pl=>{ s.placedArea+=pl.w*pl.h; colorFor(pl.code,colorMap); });
+    totalPlacedArea+=s.placedArea; totalPlaced+=s.placed.length;
+    s.util=s.placedArea/sheetArea*100;
+    // retazo: mayor rect libre
+    s.retazo=s.free.reduce((m,f)=>(f.w*f.h>(m?m.w*m.h:0)?f:m),null);
+  });
+  const avgUtil = sheets.length? totalPlacedArea/(sheets.length*sheetArea)*100 : 0;
+
+  state.chapas.result={ L,W,esp,gap,margen,usableW,usableH,sheets,colorMap,
+    kpi:{ nSheets:sheets.length, avgUtil, waste:100-avgUtil, placed:totalPlaced, req:totalReq },
+    noFit };
+  state.chapas.currentSheet=0;
+  renderChapasResult();
+  toast('Optimización completada — '+sheets.length+' chapa(s)','ok');
+}
+
+/* ===================== RENDER 2D ===================== */
+function renderChapasEmpty(){
+  $('chapas-results').innerHTML=`<div class="card"><div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 10h18M9 5v14"/></svg>
+    <h3>Sin resultados aún</h3><p>Editaste los datos. Presioná <strong>Calcular Optimización</strong> nuevamente.</p></div></div>`;
+}
+function renderChapasResult(){
+  const r=state.chapas.result; if(!r) return renderChapasEmpty();
+  const k=r.kpi;
+  let html=`
+  <div class="kpi-row">
+    <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub">${esc(r.esp||'—')}</div></div>
+    <div class="kpi k-green"><div class="k-label">Aprovechamiento prom.</div><div class="k-value">${fmt(k.avgUtil)}%</div><div class="k-sub">${r.L}×${r.W} mm</div></div>
+    <div class="kpi k-red"><div class="k-label">Material desperdiciado</div><div class="k-value">${fmt(k.waste)}%</div><div class="k-sub">incluye gap y márgenes</div></div>
+    <div class="kpi k-orange"><div class="k-label">Piezas ubicadas</div><div class="k-value">${k.placed}<span style="font-size:18px;color:var(--text-secondary)">/${k.req}</span></div><div class="k-sub">${k.placed<k.req?'⚠ faltan ubicar':'✓ todas ubicadas'}</div></div>
+  </div>`;
+
+  if(r.noFit && r.noFit.length){
+    html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
+      <h4>⚠ Piezas no ubicadas</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.w}×${n.h} mm (×${n.cant}) — no entra en la chapa matriz bajo ninguna orientación.</li>`).join('')}</ul>
+    </div></div></div>`;
+  }
+
+  // viz
+  html+=`<div class="card">
+    <div class="viz-head"><h3>Visualización de Nesting</h3>
+      <div class="nav-sheets">
+        <button class="nav-btn" id="ch-prev" onclick="OptiCorte.navSheet(-1)">‹</button>
+        <span class="nav-label" id="ch-navlabel"></span>
+        <button class="nav-btn" id="ch-next" onclick="OptiCorte.navSheet(1)">›</button>
+      </div>
+    </div>
+    <div class="viz-canvas" id="ch-svg"></div>
+  </div>`;
+
+  // tabla detalle
+  html+=`<div class="card">
+    <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa</h3></div>
+    <table class="tbl-result"><thead><tr><th>Chapa N°</th><th>Pieza / Código</th><th>Dimensiones</th><th>Cant. en chapa</th></tr></thead><tbody>`;
+  r.sheets.forEach((s,si)=>{
+    const agg={};
+    s.placed.forEach(p=>{ const key=p.code+'|'+p.w+'x'+p.h; agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0,rot:p.rot}; agg[key].n++; });
+    Object.values(agg).forEach((a,idx)=>{
+      html+=`<tr><td>${idx===0?'<strong>#'+(si+1)+'</strong>':''}</td>
+        <td><span class="swatch" style="background:${r.colorMap[a.code]}"></span>${esc(a.code)}</td>
+        <td>${a.w}×${a.h} mm</td><td>${a.n}</td></tr>`;
+    });
+    if(s.retazo && s.retazo.w>20 && s.retazo.h>20){
+      html+=`<tr class="retazo-row"><td></td><td colspan="3">Retazo útil: ${Math.round(s.retazo.w)} × ${Math.round(s.retazo.h)} mm — Guardar en stock</td></tr>`;
+    }
+  });
+  html+=`</tbody></table></div>`;
+
+  $('chapas-results').innerHTML=html;
+  drawSheet(state.chapas.currentSheet);
+}
+
+function navSheet(d){
+  const r=state.chapas.result; if(!r)return;
+  state.chapas.currentSheet=Math.max(0,Math.min(r.sheets.length-1,state.chapas.currentSheet+d));
+  drawSheet(state.chapas.currentSheet);
+}
+
+function buildSheetSVG(idx){
+  const r=state.chapas.result; const s=r.sheets[idx];
+  const maxW=720, scale=maxW/r.L, h=r.W*scale;
+  const ns='http://www.w3.org/2000/svg';
+  let svg=`<svg viewBox="0 0 ${maxW} ${h}" xmlns="${ns}" font-family="Inter,sans-serif">`;
+  svg+=`<rect x="0" y="0" width="${maxW}" height="${h}" fill="#fff" stroke="#D2DAE8" stroke-width="1.5"/>`;
+  // margen guía
+  const mx=r.margen*scale;
+  svg+=`<rect x="${mx}" y="${mx}" width="${(r.L-2*r.margen)*scale}" height="${(r.W-2*r.margen)*scale}" fill="none" stroke="#E4E9F2" stroke-width="1" stroke-dasharray="4 4"/>`;
+  // retazo (mayor libre)
+  if(s.retazo && s.retazo.w>20 && s.retazo.h>20){
+    const f=s.retazo;
+    svg+=`<rect x="${f.x*scale}" y="${f.y*scale}" width="${f.w*scale}" height="${f.h*scale}" fill="#EEF1F6" stroke="#C3CCDB" stroke-width="1" stroke-dasharray="3 3"/>`;
+    if(f.w*scale>60 && f.h*scale>24)
+      svg+=`<text x="${(f.x+f.w/2)*scale}" y="${(f.y+f.h/2)*scale}" fill="#8A93A8" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">RETAZO ${Math.round(f.w)}×${Math.round(f.h)}</text>`;
+  }
+  // piezas
+  s.placed.forEach(p=>{
+    const c=r.colorMap[p.code];
+    const x=p.x*scale, y=p.y*scale, w=p.w*scale, hh=p.h*scale;
+    svg+=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${c}" fill-opacity="0.86" stroke="${c}" stroke-width="1.5" rx="2"/>`;
+    if(w>40 && hh>20){
+      svg+=`<text x="${x+w/2}" y="${y+hh/2-3}" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(p.code)}</text>`;
+      svg+=`<text x="${x+w/2}" y="${y+hh/2+11}" fill="#fff" font-size="9" fill-opacity="0.85" text-anchor="middle" dominant-baseline="middle">${p.w}×${p.h}${p.rot?' ⟳':''}</text>`;
+    }
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+function drawSheet(idx){
+  const r=state.chapas.result; if(!r)return;
+  $('ch-svg').innerHTML=buildSheetSVG(idx);
+  $('ch-navlabel').textContent=`Chapa ${idx+1} / ${r.sheets.length}`;
+  $('ch-prev').disabled=idx<=0;
+  $('ch-next').disabled=idx>=r.sheets.length-1;
+}
+
+/* ===================== ALGORITMO 1D — FFD ===================== */
+function calcularCanos(){
+  const barL=num('ca-largo',6000), kerf=num('ca-sangria',3), reuse=num('ca-reuse',200);
+  const desc=$('ca-desc').value.trim();
+  if(barL<=0){ toast('Largo de barra inválido','err'); return; }
+  const cortes=state.canos.cortes.filter(c=>parseFloat(c.largo)>0 && parseInt(c.cant)>0);
+  if(!cortes.length){ toast('Agregá al menos un corte válido','err'); return; }
+
+  let pieces=[]; const noFit=[];
+  cortes.forEach(c=>{
+    const len=parseFloat(c.largo), q=parseInt(c.cant), code=c.codigo||('C'+(pieces.length+1));
+    if(len>barL){ noFit.push({code,len,cant:q}); return; }
+    for(let k=0;k<q;k++) pieces.push({code,len});
+  });
+  pieces.sort((a,b)=>b.len-a.len);
+
+  const bars=[];
+  pieces.forEach(p=>{
+    let placed=false;
+    for(const bar of bars){
+      // necesita len + kerf (el disco consume material por corte)
+      if(bar.remaining >= p.len+kerf-1e-9){
+        bar.cuts.push(p); bar.remaining-=(p.len+kerf); placed=true; break;
+      }
+    }
+    if(!placed){ bars.push({remaining:barL-(p.len+kerf), cuts:[p]}); }
+  });
+
+  // métricas
+  const colorMap={};
+  let totalCut=0, totalDesp=0, totalSobra=0;
+  bars.forEach(b=>{
+    b.used=b.cuts.reduce((s,c)=>s+c.len,0);
+    b.kerfTotal=b.cuts.length*kerf;
+    b.leftover=barL-b.used-b.kerfTotal;
+    b.reusable = b.leftover>=reuse;
+    b.desperdicio = b.kerfTotal + (b.reusable?0:Math.max(0,b.leftover));
+    b.sobrante = b.reusable?b.leftover:0;
+    b.cuts.forEach(c=>colorFor(c.code,colorMap));
+    totalCut+=b.used; totalDesp+=b.desperdicio; totalSobra+=b.sobrante;
+  });
+  const util = bars.length? totalCut/(bars.length*barL)*100 : 0;
+
+  // patrones consecutivos
+  bars.forEach(b=>{
+    const sig={}; b.cuts.forEach(c=>{ sig[c.code+'@'+c.len]=(sig[c.code+'@'+c.len]||0)+1; });
+    b.sig=Object.keys(sig).sort().map(k=>k+'×'+sig[k]).join(' | ');
+  });
+
+  state.canos.result={ barL,kerf,reuse,desc,bars,colorMap,
+    kpi:{ nBars:bars.length, util, desp:totalDesp, sobra:totalSobra }, noFit };
+  renderCanosResult();
+  toast('Optimización completada — '+bars.length+' barra(s)','ok');
+}
+
+/* ===================== RENDER 1D ===================== */
+function renderCanosEmpty(){
+  $('canos-results').innerHTML=`<div class="card"><div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>
+    <h3>Sin resultados aún</h3><p>Editaste los datos. Presioná <strong>Calcular Optimización</strong> nuevamente.</p></div></div>`;
+}
+function renderCanosResult(){
+  const r=state.canos.result; if(!r) return renderCanosEmpty();
+  const k=r.kpi;
+  let html=`
+  <div class="kpi-row">
+    <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub">${esc(r.desc||'—')}</div></div>
+    <div class="kpi k-green"><div class="k-label">Aprovechamiento</div><div class="k-value">${fmt(k.util)}%</div><div class="k-sub">barra ${r.barL} mm</div></div>
+    <div class="kpi k-red"><div class="k-label">Desperdicio total</div><div class="k-value" style="font-size:24px">${fmt(k.desp)}<span style="font-size:14px"> mm</span></div><div class="k-sub">sangría + retazos &lt; ${r.reuse}mm</div></div>
+    <div class="kpi"><div class="k-label">Sobrante útil total</div><div class="k-value" style="font-size:24px">${fmt(k.sobra)}<span style="font-size:14px"> mm</span></div><div class="k-sub">reutilizable ≥ ${r.reuse}mm</div></div>
+  </div>`;
+
+  if(r.noFit && r.noFit.length){
+    html+=`<div class="card"><div class="card-body" style="padding:14px"><div class="alert">
+      <h4>⚠ Cortes no ubicables</h4><ul>${r.noFit.map(n=>`<li>• <strong>${esc(n.code)}</strong> ${n.len} mm (×${n.cant}) — supera el largo comercial de la barra.</li>`).join('')}</ul>
+    </div></div></div>`;
+  }
+
+  // viz barras
+  html+=`<div class="card"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte por Barra</h3></div>
+    <div class="card-body" id="ca-svg" style="display:flex;flex-direction:column;gap:14px"></div></div>`;
+
+  // hoja de ruta con agrupación de patrones
+  html+=`<div class="card"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta</h3></div>
+    <table class="tbl-result"><thead><tr><th>Barra N°</th><th>Secuencia de cortes</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
+  let i=0;
+  while(i<r.bars.length){
+    let j=i;
+    while(j+1<r.bars.length && r.bars[j+1].sig===r.bars[i].sig) j++;
+    if(j>i){
+      html+=`<tr class="pattern-row"><td colspan="4">▦ Barras ${i+1} a ${j+1}: mismo patrón de corte (${j-i+1} barras)</td></tr>`;
+    }
+    for(let b=i;b<=j;b++){
+      const bar=r.bars[b];
+      const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${esc(c.code)} · ${c.len}mm</span>`).join('');
+      html+=`<tr><td><strong>#${b+1}</strong></td><td>${chips}</td>
+        <td>${fmt(bar.desperdicio)} mm</td>
+        <td>${bar.sobrante>0?`<span style="color:var(--success);font-weight:600">${fmt(bar.sobrante)} mm</span>`:'<span class="muted">—</span>'}</td></tr>`;
+    }
+    i=j+1;
+  }
+  html+=`</tbody></table></div>`;
+
+  $('canos-results').innerHTML=html;
+  $('ca-svg').innerHTML=r.bars.map((b,idx)=>buildBarSVG(b,idx)).join('');
+}
+
+function buildBarSVG(bar,idx){
+  const r=state.canos.result;
+  const W=760, H=46, scale=W/r.barL;
+  const ns='http://www.w3.org/2000/svg';
+  let svg=`<div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Barra #${idx+1} — ${r.barL} mm</div>`;
+  svg+=`<svg viewBox="0 0 ${W} ${H}" xmlns="${ns}" font-family="Inter,sans-serif" style="width:100%;height:auto">`;
+  svg+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff" stroke="#D2DAE8" stroke-width="1" rx="3"/>`;
+  let cx=0;
+  bar.cuts.forEach(c=>{
+    const w=c.len*scale, kw=r.kerf*scale;
+    const col=r.colorMap[c.code];
+    svg+=`<rect x="${cx}" y="0" width="${w}" height="${H}" fill="${col}" fill-opacity="0.85" stroke="${col}" stroke-width="1"/>`;
+    if(w>34){
+      svg+=`<text x="${cx+w/2}" y="${H/2-3}" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(c.code)}</text>`;
+      svg+=`<text x="${cx+w/2}" y="${H/2+10}" fill="#fff" font-size="9" fill-opacity="0.9" text-anchor="middle" dominant-baseline="middle">${c.len}mm</text>`;
+    }
+    cx+=w;
+    if(kw>0.5){ svg+=`<rect x="${cx}" y="0" width="${kw}" height="${H}" fill="#1B2535" fill-opacity="0.35"/>`; cx+=kw; }
+  });
+  // sobrante / desperdicio final
+  if(cx<W){
+    const lw=W-cx, leftMm=bar.leftover;
+    const col=bar.reusable?'#EAF1FC':'#F2F5FA';
+    const txtCol=bar.reusable?'#1557B0':'#8A93A8';
+    svg+=`<rect x="${cx}" y="0" width="${lw}" height="${H}" fill="${col}" stroke="#C3CCDB" stroke-width="1" stroke-dasharray="3 3"/>`;
+    if(lw>50)
+      svg+=`<text x="${cx+lw/2}" y="${H/2}" fill="${txtCol}" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">${bar.reusable?'SOBRANTE':'resto'} ${fmt(leftMm)}mm</text>`;
+  }
+  svg+=`</svg></div>`;
+  return svg;
+}
+
+/* ===================== EXPORT EXCEL ===================== */
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ toast('SheetJS no cargó (sin conexión)','err'); return; }
+  const proj=$('projectName').value, fecha=new Date().toLocaleDateString('es-AR');
+  const wb=XLSX.utils.book_new();
+  const head=[['OptiCorte v1.0 — Optimización Industrial'],['Proyecto:',proj],['Fecha:',fecha],[]];
+
+  // Hoja Resumen
+  const resumen=[...head,['RESUMEN DE MATERIALES'],['Tipo','Dimensión / Descripción','Cantidad','Aprovechamiento %']];
+  const rc=state.chapas.result, rk=state.canos.result;
+  if(rc) resumen.push(['Chapa',`${rc.L}×${rc.W} mm — ${rc.esp}`,rc.kpi.nSheets,fmt(rc.kpi.avgUtil)+'%']);
+  if(rk) resumen.push(['Barra/Perfil',`${rk.barL} mm — ${rk.desc}`,rk.kpi.nBars,fmt(rk.kpi.util)+'%']);
+  if(!rc&&!rk) resumen.push(['—','Sin cálculos realizados','','']);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen');
+
+  // Hoja Chapas
+  const ch=[...head,['DETALLE DE CHAPAS'],['Chapa N°','Código Pieza','Largo','Ancho','Rotada','Pos X','Pos Y']];
+  if(rc){ rc.sheets.forEach((s,si)=>s.placed.forEach(p=>ch.push([si+1,p.code,p.w,p.h,p.rot?'Sí':'No',Math.round(p.x),Math.round(p.y)]))); }
+  else ch.push(['Sin datos','','','','','','']);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ch), 'Chapas');
+
+  // Hoja Caños
+  const ca=[...head,['HOJA DE RUTA — CAÑOS / PERFILES'],['Barra N°','Secuencia de cortes','Desperdicio (mm)','Sobrante útil (mm)']];
+  if(rk){ rk.bars.forEach((b,bi)=>{
+    const seq=b.cuts.map(c=>`${c.code}:${c.len}mm`).join('  +  ');
+    ca.push([bi+1,seq,Math.round(b.desperdicio),Math.round(b.sobrante)]);
+  }); } else ca.push(['Sin datos','','','']);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ca), 'Caños');
+
+  XLSX.writeFile(wb, `OptiCorte_${proj.replace(/[^\w\-]+/g,'_')}.xlsx`);
+  toast('Excel exportado','ok');
+}
+
+/* ===================== EXPORT PDF ===================== */
+function svgToPng(svgString, wPx, hPx){
+  return new Promise(res=>{
+    const img=new Image();
+    const blob=new Blob([svgString],{type:'image/svg+xml;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    img.onload=()=>{
+      const cv=document.createElement('canvas');
+      const sc=2; cv.width=wPx*sc; cv.height=hPx*sc;
+      const ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(url);
+      res(cv.toDataURL('image/png'));
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(null); };
+    img.src=url;
+  });
+}
+
+async function exportPDF(){
+  if(!window.jspdf){ toast('jsPDF no cargó (sin conexión)','err'); return; }
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const proj=$('projectName').value, fecha=new Date().toLocaleDateString('es-AR');
+  const PW=210, M=14; let y=0;
+  toast('Generando PDF…');
+
+  function header(){
+    doc.setFillColor(30,111,217); doc.rect(0,0,PW,20,'F');
+    doc.setFillColor(245,130,32); doc.rect(0,18,PW,2,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15);
+    doc.text('OPTICORTE',M,9);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Software de Optimización Industrial',M,14.5);
+    doc.setFontSize(9); doc.setTextColor(255,255,255);
+    doc.text(proj,PW-M,9,{align:'right'});
+    doc.setFontSize(7.5); doc.text(fecha+'  ·  v1.0',PW-M,14,{align:'right'});
+    y=28;
+  }
+  function checkPage(need){ if(y+need>282){ footer(); doc.addPage(); header(); } }
+  let pageNo=1;
+  function footer(){
+    doc.setFontSize(7.5); doc.setTextColor(150,160,175);
+    doc.text('Generado por OptiCorte v1.0',M,290);
+    doc.text('Página '+pageNo,PW-M,290,{align:'right'}); pageNo++;
+  }
+  function sectionTitle(t,color){
+    checkPage(14);
+    doc.setFillColor(...color); doc.rect(M,y,PW-2*M,8,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text(t,M+3,y+5.5); y+=12; doc.setTextColor(40,50,65);
+  }
+
+  header();
+
+  const rc=state.chapas.result;
+  if(rc){
+    sectionTitle('CHAPAS — Optimización 2D',[30,111,217]);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(60,70,85);
+    doc.text(`Chapa ${rc.L}×${rc.W} mm (${rc.esp}) · Chapas: ${rc.kpi.nSheets} · Aprov. ${fmt(rc.kpi.avgUtil)}% · Desperdicio ${fmt(rc.kpi.waste)}% · Piezas ${rc.kpi.placed}/${rc.kpi.req}`,M,y); y+=7;
+
+    for(let si=0; si<rc.sheets.length; si++){
+      const svg=buildSheetSVG(si);
+      const imgW=PW-2*M, imgH=imgW*(rc.W/rc.L);
+      checkPage(imgH+8);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(30,111,217);
+      doc.text(`Chapa #${si+1}`,M,y); y+=3;
+      const png=await svgToPng(svg, 760, 760*(rc.W/rc.L));
+      if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+3; }
+      // tabla piezas de esta chapa
+      const agg={}; rc.sheets[si].placed.forEach(p=>{const key=p.code+'|'+p.w+'x'+p.h;agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0};agg[key].n++;});
+      doc.setFontSize(8); doc.setTextColor(60,70,85); doc.setFont('helvetica','normal');
+      Object.values(agg).forEach(a=>{ checkPage(5); doc.text(`• ${a.code}: ${a.w}×${a.h} mm  ×${a.n}`,M+2,y); y+=4; });
+      const rz=rc.sheets[si].retazo;
+      if(rz&&rz.w>20&&rz.h>20){ checkPage(5); doc.setTextColor(224,106,10); doc.text(`▣ Retazo útil: ${Math.round(rz.w)}×${Math.round(rz.h)} mm`,M+2,y); y+=6; }
+      y+=2;
+    }
+  }
+
+  const rk=state.canos.result;
+  if(rk){
+    checkPage(20);
+    sectionTitle('CAÑOS / PERFILES — Optimización 1D',[245,130,32]);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(60,70,85);
+    doc.text(`Barra ${rk.barL} mm (${rk.desc}) · Barras: ${rk.kpi.nBars} · Aprov. ${fmt(rk.kpi.util)}% · Desperdicio ${fmt(rk.kpi.desp)} mm · Sobrante ${fmt(rk.kpi.sobra)} mm`,M,y); y+=7;
+
+    for(let bi=0; bi<rk.bars.length; bi++){
+      const svg=buildBarSVG(rk.bars[bi],bi).replace(/^<div>.*?<svg/s,'<svg').replace(/<\/svg><\/div>$/,'</svg>');
+      const imgW=PW-2*M, imgH=imgW*(46/760);
+      checkPage(imgH+10);
+      const png=await svgToPng(svg, 760, 46);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(224,106,10);
+      doc.text(`Barra #${bi+1}`,M,y); y+=2.5;
+      if(png){ doc.addImage(png,'PNG',M,y,imgW,imgH); y+=imgH+2; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(60,70,85);
+      const seq=rk.bars[bi].cuts.map(c=>`${c.code}:${c.len}`).join('  +  ');
+      doc.text(`Cortes: ${seq}  |  Desperdicio: ${Math.round(rk.bars[bi].desperdicio)}mm  |  Sobrante: ${Math.round(rk.bars[bi].sobrante)}mm`,M+2,y,{maxWidth:PW-2*M-4}); y+=7;
+    }
+  }
+
+  if(!rc&&!rk){
+    doc.setFontSize(11); doc.setTextColor(120,130,145);
+    doc.text('No hay cálculos realizados. Ejecutá una optimización antes de exportar.',M,y);
+  }
+  footer();
+  doc.save(`OptiCorte_${proj.replace(/[^\w\-]+/g,'_')}.pdf`);
+  toast('PDF exportado','ok');
+}
+
+/* ===================== INIT ===================== */
+function init(){
+  // precarga piezas (2D)
+  [{codigo:'TAPA-A',largo:600,ancho:400,cant:4,rot:true},
+   {codigo:'LATERAL',largo:800,ancho:250,cant:6,rot:true},
+   {codigo:'REFUERZO',largo:1200,ancho:150,cant:3,rot:false}].forEach(p=>state.chapas.piezas.push(p));
+  renderPiezas();
+
+  // precarga cortes (1D)
+  [{codigo:'PATA',largo:1100,cant:8},
+   {codigo:'TRAVESAÑO',largo:750,cant:6},
+   {codigo:'LARGUERO',largo:2400,cant:4},
+   {codigo:'REFUERZO',largo:480,cant:10}].forEach(c=>state.canos.cortes.push(c));
+  renderCortes();
+}
+init();
+
+return { switchTab, dirty, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
+         calcularChapas, calcularCanos, navSheet, exportExcel, exportPDF };
+})();
+</script>
+</body>
+</html>

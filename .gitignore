@@ -1,0 +1,4 @@
+# Archivos generados / temporales
+*.log
+.DS_Store
+Thumbs.db
