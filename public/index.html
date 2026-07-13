@@ -491,7 +491,8 @@ input{font-family:inherit}
 #labels-sheet{display:none}
 .label-card{border:1px solid #cdd4e0;border-left:5px solid var(--blue);border-radius:6px;padding:8px 11px;break-inside:avoid;page-break-inside:avoid}
 .label-card .lc-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
-.label-card .lc-code{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:#1B2535;word-break:break-word}
+.label-card .lc-code{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:#1B2535;word-break:break-word;display:flex;align-items:center;gap:6px}
+.label-card .lc-num{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 5px;border-radius:11px;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
 .label-card .lc-seq{font-size:10px;color:#69768B;font-weight:700;white-space:nowrap}
 .label-card .lc-dim{font-size:14px;font-weight:600;color:#1B2535;margin-top:3px}
 .label-card .lc-meta{font-size:10px;color:#69768B;margin-top:5px}
@@ -1032,8 +1033,8 @@ function computeChapa(mat){
 
   const usableW=L-2*margen, usableH=W-2*margen;
 
-  // expandir instancias
-  let instances=[];
+  // expandir instancias (con número correlativo para casar diagrama ↔ etiqueta)
+  let instances=[]; let pieceNo=0;
   const noFit=[];
   piezas.forEach(p=>{
     const pw=parseFloat(p.largo), ph=parseFloat(p.ancho), q=parseInt(p.cant), rot=(!!p.rot)&&!veta;
@@ -1042,8 +1043,9 @@ function computeChapa(mat){
     const fitsNormal = pw<=usableW && ph<=usableH;
     const fitsRot = rot && ph<=usableW && pw<=usableH;
     if(!fitsNormal && !fitsRot){ noFit.push({code,w:pw,h:ph,cant:q}); return; }
-    for(let k=0;k<q;k++) instances.push({code,w:pw,h:ph,rot,area:pw*ph});
+    for(let k=0;k<q;k++){ pieceNo++; instances.push({n:pieceNo,code,w:pw,h:ph,rot,area:pw*ph}); }
   });
+  const pieces = instances.map(i=>({n:i.n,code:i.code,w:i.w,h:i.h}));
   instances.sort((a,b)=>b.area-a.area);
 
   const sheets=[];
@@ -1075,7 +1077,7 @@ function computeChapa(mat){
       }
       if(best){
         const used={x:best.f.x,y:best.f.y,w:best.fw,h:best.fh};
-        sheet.placed.push({code:best.inst.code,x:best.f.x,y:best.f.y,w:best.o.w,h:best.o.h,rot:best.o.rot});
+        sheet.placed.push({n:best.inst.n,code:best.inst.code,x:best.f.x,y:best.f.y,w:best.o.w,h:best.o.h,rot:best.o.rot});
         sheet.free=splitFree(sheet.free,used);
         remaining.splice(best.pi,1);
         placedAny=true;
@@ -1105,7 +1107,7 @@ function computeChapa(mat){
   const pesoKg = totalM2 * espMM * dens;       // m² · mm · (kg/dm³) = kg
   const costo  = totalM2 * precioM2;
 
-  return { L,W,esp,gap,margen,veta,usableW,usableH,sheets,colorMap,
+  return { L,W,esp,gap,margen,veta,usableW,usableH,sheets,colorMap,pieces,
     kpi:{ nSheets:sheets.length, avgUtil, waste:100-avgUtil, placed:totalPlaced, req:totalReq },
     cost:{ totalM2, pesoKg, costo, hasW:espMM>0&&dens>0, hasC:precioM2>0 },
     noFit };
@@ -1247,6 +1249,11 @@ function buildSheetSVG(r,idx){
       svg+=`<text x="${x+w/2}" y="${y+hh/2-3}" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(p.code)}</text>`;
       svg+=`<text x="${x+w/2}" y="${y+hh/2+11}" fill="#fff" font-size="9" fill-opacity="0.85" text-anchor="middle" dominant-baseline="middle">${p.w}×${p.h}${p.rot?' ⟳':''}</text>`;
     }
+    // número correlativo (casa con la etiqueta)
+    if(p.n!=null && w>22 && hh>16){
+      svg+=`<circle cx="${x+9}" cy="${y+9}" r="7.5" fill="#fff" fill-opacity="0.95" stroke="${c}" stroke-width="1"/>`;
+      svg+=`<text x="${x+9}" y="${y+9}" fill="${c}" font-size="9" font-weight="800" text-anchor="middle" dominant-baseline="central">${p.n}</text>`;
+    }
   });
   svg+=`</g></svg>`;
   return svg;
@@ -1274,12 +1281,13 @@ function computeCano(mat){
   const cortes=mat.cortes.filter(c=>parseFloat(c.largo)>0 && parseInt(c.cant)>0);
   if(!cortes.length) return null;
 
-  let pieces=[]; const noFit=[];
+  let pieces=[]; let cutNo=0; const noFit=[];
   cortes.forEach(c=>{
     const len=parseFloat(c.largo), q=parseInt(c.cant), code=c.codigo||('C'+(pieces.length+1));
     if(len>barL){ noFit.push({code,len,cant:q}); return; }
-    for(let k=0;k<q;k++) pieces.push({code,len});
+    for(let k=0;k<q;k++){ cutNo++; pieces.push({n:cutNo,code,len}); }
   });
+  const piecesList = pieces.map(p=>({n:p.n,code:p.code,len:p.len}));
   pieces.sort((a,b)=>b.len-a.len);
 
   const bars=[];
@@ -1321,7 +1329,7 @@ function computeCano(mat){
   const pesoKg = totalM * kgM;
   const costo  = totalM * precioM;
 
-  return { barL,kerf,reuse,desc,bars,colorMap,
+  return { barL,kerf,reuse,desc,bars,colorMap,pieces:piecesList,
     kpi:{ nBars:bars.length, util, desp:totalDesp, sobra:totalSobra },
     cost:{ totalM, pesoKg, costo, hasW:kgM>0, hasC:precioM>0 }, noFit };
 }
@@ -1398,7 +1406,7 @@ function renderCanosResult(){
       if(j>i) html+=`<tr class="pattern-row"><td colspan="4">▦ Barras ${i+1} a ${j+1}: mismo patrón de corte (${j-i+1} barras)</td></tr>`;
       for(let b=i;b<=j;b++){
         const bar=r.bars[b];
-        const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${esc(c.code)} · ${c.len}mm</span>`).join('');
+        const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${c.n!=null?('<b>#'+c.n+'</b> '):''}${esc(c.code)} · ${c.len}mm</span>`).join('');
         html+=`<tr><td><strong>#${b+1}</strong></td><td>${chips}</td>
           <td>${fmt(bar.desperdicio)} mm</td>
           <td>${bar.sobrante>0?`<span style="color:var(--success);font-weight:600">${fmt(bar.sobrante)} mm</span>`:'<span class="muted">—</span>'}</td></tr>`;
@@ -1426,6 +1434,10 @@ function buildBarSVG(r,bar,idx){
     if(w>34){
       svg+=`<text x="${cx+w/2}" y="${H/2-3}" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(c.code)}</text>`;
       svg+=`<text x="${cx+w/2}" y="${H/2+10}" fill="#fff" font-size="9" fill-opacity="0.9" text-anchor="middle" dominant-baseline="middle">${c.len}mm</text>`;
+    }
+    if(c.n!=null && w>15){
+      svg+=`<circle cx="${cx+8}" cy="9" r="6.5" fill="#fff" fill-opacity="0.95" stroke="${col}" stroke-width="1"/>`;
+      svg+=`<text x="${cx+8}" y="9" fill="${col}" font-size="8" font-weight="800" text-anchor="middle" dominant-baseline="central">${c.n}</text>`;
     }
     cx+=w;
     if(kw>0.5){ svg+=`<rect x="${cx}" y="0" width="${kw}" height="${H}" fill="#1B2535" fill-opacity="0.35"/>`; cx+=kw; }
@@ -1811,20 +1823,29 @@ function print(mode){          // mode: 'all' | 'route' | 'diagram'
   if(mode==='labels'){
     const labels=[];
     mats.forEach((m,mi)=>{
-      const items = isChapas ? m.piezas : m.cortes;
       const matLbl = isChapas ? chLabel(m,mi) : caLabel(m,mi);
-      items.forEach(it=>{
-        const largo=parseFloat(it.largo); if(!(largo>0)) return;
-        if(isChapas && !(parseFloat(it.ancho)>0)) return;
-        const cant=parseInt(it.cant)||1;
-        const dim = isChapas ? `${it.largo} × ${it.ancho} mm` : `${it.largo} mm`;
-        for(let k=1;k<=cant;k++) labels.push({code:it.codigo||'(s/cód)',dim,mat:matLbl,color:m.color,seq:cant>1?`${k}/${cant}`:''});
-      });
+      if(m.result && m.result.pieces && m.result.pieces.length){
+        // numeradas — casan con el diagrama
+        m.result.pieces.forEach(it=>{
+          const dim = isChapas ? `${it.w} × ${it.h} mm` : `${it.len} mm`;
+          labels.push({num:it.n,code:it.code||'(s/cód)',dim,mat:matLbl,color:m.color});
+        });
+      } else {
+        // sin cálculo — desde la lista, sin número
+        const items = isChapas ? m.piezas : m.cortes;
+        items.forEach(it=>{
+          const largo=parseFloat(it.largo); if(!(largo>0)) return;
+          if(isChapas && !(parseFloat(it.ancho)>0)) return;
+          const cant=parseInt(it.cant)||1;
+          const dim = isChapas ? `${it.largo} × ${it.ancho} mm` : `${it.largo} mm`;
+          for(let k=1;k<=cant;k++) labels.push({num:null,code:it.codigo||'(s/cód)',dim,mat:matLbl,color:m.color,seq:cant>1?`${k}/${cant}`:''});
+        });
+      }
     });
     if(!labels.length){ toast('No hay piezas/cortes para etiquetar en esta pestaña','err'); return; }
     $('labels-sheet').innerHTML = labels.map(l=>
       `<div class="label-card" style="border-left-color:${l.color}">
-         <div class="lc-top"><span class="lc-code">${esc(l.code)}</span><span class="lc-seq">${l.seq}</span></div>
+         <div class="lc-top"><span class="lc-code">${l.num!=null?`<span class="lc-num" style="background:${l.color}">${l.num}</span>`:''}${esc(l.code)}</span><span class="lc-seq">${l.seq||''}</span></div>
          <div class="lc-dim">${esc(l.dim)}</div>
          <div class="lc-meta">${esc(l.mat)}${otNum?(' · OT '+esc(otNum)):''}</div>
        </div>`).join('');
