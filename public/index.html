@@ -339,6 +339,19 @@ input{font-family:inherit}
 .otro-row input:first-child{flex:1}
 .otro-row input[type=number]{width:110px;text-align:right}
 .otro-row input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 2px var(--blue-light)}
+.presu-toprow{display:flex;align-items:flex-end;gap:12px;margin-bottom:16px}
+.empresa-btn{width:auto!important;padding:10px 14px!important;font-size:13px;font-weight:600;white-space:nowrap}
+.presu-num{flex:1}
+.presu-num label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:7px}
+.presu-num input{width:100%;background:var(--surface-alt);border:1.5px solid var(--border-strong);border-radius:9px;padding:10px 12px;font-size:14px;font-weight:600;color:var(--text)}
+.presu-num input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
+.presu-field3{display:flex;gap:12px;margin-bottom:16px}
+.presu-field3 > div{flex:1}
+.presu-field3 label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:7px}
+.presu-field3 input,.presu-field3 select{width:100%;background:var(--surface-alt);border:1.5px solid var(--border-strong);border-radius:9px;padding:10px 12px;font-size:14px;font-weight:500;color:var(--text)}
+.presu-field3 input:focus,.presu-field3 select:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-light)}
+.emp-logo-row{display:flex;align-items:center;gap:10px}
+.emp-logo-preview{max-height:44px;max-width:150px;border:1px solid var(--border);border-radius:6px;padding:3px;background:#fff}
 .presu-field2{display:flex;gap:14px;margin-bottom:16px}
 .presu-field2 > div{flex:1}
 .presu-field2 label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:7px}
@@ -919,6 +932,37 @@ input{font-family:inherit}
   </div>
 </div>
 
+<div id="empresa-modal" class="modal-overlay hidden">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-head"><h3>🏢 Datos de mi empresa</h3><button class="modal-close" onclick="OptiCorte.closeEmpresa()">✕</button></div>
+    <div class="modal-body">
+      <p class="paste-hint">Estos datos aparecen como <b>membrete</b> en el PDF del presupuesto. Se guardan en este navegador y valen para todas las OTs.</p>
+      <div class="presu-field"><label>Nombre / Razón social</label><input class="input" type="text" id="emp-nombre" placeholder="Ej. Metalúrgica del Sur S.R.L."></div>
+      <div class="presu-field2">
+        <div><label>CUIT</label><input class="input" type="text" id="emp-cuit" placeholder="30-12345678-9"></div>
+        <div><label>Teléfono</label><input class="input" type="text" id="emp-tel" placeholder="+54 ..."></div>
+      </div>
+      <div class="presu-field2">
+        <div><label>Email</label><input class="input" type="text" id="emp-email" placeholder="ventas@..."></div>
+        <div><label>Web</label><input class="input" type="text" id="emp-web" placeholder="www..."></div>
+      </div>
+      <div class="presu-field"><label>Dirección</label><input class="input" type="text" id="emp-dir" placeholder="Calle 123, Ciudad, Provincia"></div>
+      <div class="presu-field"><label>Logo <span class="muted">(opcional — PNG/JPG)</span></label>
+        <div class="emp-logo-row">
+          <img id="emp-logo-preview" class="emp-logo-preview" style="display:none" alt="logo">
+          <input type="file" id="emp-logo-input" accept="image/png,image/jpeg" style="display:none" onchange="OptiCorte.empresaLogoUpload(event)">
+          <button class="lib-btn" style="width:auto;padding:8px 12px" onclick="document.getElementById('emp-logo-input').click()">Subir logo</button>
+          <button class="lib-btn" style="width:auto;padding:8px 12px" onclick="OptiCorte.removeEmpresaLogo()">Quitar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-meta" onclick="OptiCorte.closeEmpresa()">Cancelar</button>
+      <button class="btn-meta save" onclick="OptiCorte.saveEmpresa()">Guardar datos</button>
+    </div>
+  </div>
+</div>
+
 <div id="lib-modal" class="modal-overlay hidden">
   <div class="modal-card" style="max-width:600px">
     <div class="modal-head"><h3>📚 Biblioteca de materiales</h3><button class="modal-close" onclick="OptiCorte.closeLib()">✕</button></div>
@@ -930,6 +974,11 @@ input{font-family:inherit}
   <div class="modal-card" style="max-width:600px">
     <div class="modal-head"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Presupuesto / Cotización</h3><button class="modal-close" onclick="OptiCorte.closePresupuesto()">✕</button></div>
     <div class="modal-body">
+      <div class="presu-toprow">
+        <button class="lib-btn empresa-btn" onclick="OptiCorte.openEmpresa()" title="Editar el membrete de tu empresa">🏢 Datos de mi empresa</button>
+        <div class="presu-num"><label>N° Presupuesto</label><input type="text" id="presu-numero" spellcheck="false" oninput="OptiCorte.pField('numero',this.value)"></div>
+      </div>
+
       <div class="presu-row"><span>Costo de materiales <span class="muted">(de los cálculos)</span></span><strong id="presu-mat">$0,00</strong></div>
 
       <div class="presu-field"><label>Mano de obra</label>
@@ -947,20 +996,30 @@ input{font-family:inherit}
         <button class="btn-add" style="margin-top:8px" onclick="OptiCorte.addOtro()">+ Agregar gasto</button>
       </div>
 
-      <div class="presu-field2">
-        <div><label>Margen de ganancia (%)</label><input type="number" step="1" id="presu-margen" placeholder="0" oninput="OptiCorte.pField('margen',this.value)"></div>
+      <div class="presu-field3">
+        <div><label>Margen (%)</label><input type="number" step="1" id="presu-margen" placeholder="0" oninput="OptiCorte.pField('margen',this.value)"></div>
+        <div><label>Descuento (%)</label><input type="number" step="1" id="presu-descuento" placeholder="0" oninput="OptiCorte.pField('descuento',this.value)"></div>
         <div><label>IVA (%)</label><input type="number" step="0.5" id="presu-iva" oninput="OptiCorte.pField('iva',this.value)"></div>
       </div>
 
       <div class="presu-breakdown">
         <div class="pb-row"><span>Costo total</span><span id="pb-costo">$0,00</span></div>
-        <div class="pb-row"><span>Utilidad (margen)</span><span id="pb-utilidad">$0,00</span></div>
+        <div class="pb-row"><span>Utilidad (margen <span id="pb-margenpct">0</span>%)</span><span id="pb-utilidad">$0,00</span></div>
+        <div class="pb-row" id="pb-desc-row" style="display:none"><span>Descuento (<span id="pb-descpct">0</span>%)</span><span id="pb-desc" style="color:var(--danger)">$0,00</span></div>
         <div class="pb-row pb-sub"><span>Subtotal (neto)</span><span id="pb-neto">$0,00</span></div>
         <div class="pb-row"><span>IVA <span id="pb-ivapct">21</span>%</span><span id="pb-iva">$0,00</span></div>
-        <div class="pb-row pb-total"><span>TOTAL a cobrar</span><span id="pb-total">$0,00</span></div>
+        <div class="pb-row pb-total"><span>TOTAL a cobrar <span id="pb-redondeo-note" class="muted" style="display:none;font-size:11px;font-weight:500">(redondeado)</span></span><span id="pb-total">$0,00</span></div>
       </div>
 
-      <div class="presu-field2">
+      <div class="presu-field3">
+        <div><label>Redondeo</label>
+          <select id="presu-redondeo" onchange="OptiCorte.pField('redondeo',this.value)">
+            <option value="0">Sin redondeo</option>
+            <option value="10">al $10</option>
+            <option value="100">al $100</option>
+            <option value="1000">al $1.000</option>
+          </select>
+        </div>
         <div><label>Validez (días)</label><input type="number" id="presu-validez" oninput="OptiCorte.pField('validez',this.value)"></div>
         <div></div>
       </div>
@@ -1002,7 +1061,7 @@ const OptiCorte = (function(){
 const PALETTE = ['#1E6FD9','#F58220','#2ECC71','#9B59B6','#16A085','#E84393','#F1C40F','#0EA5E9','#EF5350','#475569'];
 const MAT_COLORS = ['#1E6FD9','#F58220','#8E44AD','#16A085','#E84393','#2E86E0','#E67E22','#27AE60','#C0392B','#0EA5E9'];
 
-function newPresupuesto(){ return { moHoras:'', moValor:'', otros:[], margen:'', iva:21, validez:15, condiciones:'Precios en pesos. Validez sujeta a variación de costos. No incluye montaje ni transporte salvo indicación.' }; }
+function newPresupuesto(){ return { numero:'', moHoras:'', moValor:'', otros:[], margen:'', descuento:'', iva:21, redondeo:0, validez:15, condiciones:'Precios en pesos. Validez sujeta a variación de costos. No incluye montaje ni transporte salvo indicación.' }; }
 const state = {
   activeTab:'chapas',
   chapas:{ mats:[], active:0 },
@@ -1790,7 +1849,7 @@ function saveJob(){
     project:$('projectName').value, ot, oc:$('meta-oc').value.trim(), cliente:$('meta-cliente').value.trim(),
     chapas:{ mats: state.chapas.mats.map(m=>({color:m.color,largo:m.largo,ancho:m.ancho,espesor:m.espesor,gap:m.gap,margen:m.margen,veta:m.veta,espesorMM:m.espesorMM,densidad:m.densidad,precioM2:m.precioM2,piezas:m.piezas.map(p=>({...p}))})) },
     canos:{ mats: state.canos.mats.map(m=>({color:m.color,largo:m.largo,sangria:m.sangria,reuse:m.reuse,desc:m.desc,kgM:m.kgM,precioM:m.precioM,cortes:m.cortes.map(c=>({...c}))})) },
-    presupuesto:{ moHoras:state.presupuesto.moHoras, moValor:state.presupuesto.moValor, otros:(state.presupuesto.otros||[]).map(o=>({...o})), margen:state.presupuesto.margen, iva:state.presupuesto.iva, validez:state.presupuesto.validez, condiciones:state.presupuesto.condiciones }
+    presupuesto:{ numero:state.presupuesto.numero, moHoras:state.presupuesto.moHoras, moValor:state.presupuesto.moValor, otros:(state.presupuesto.otros||[]).map(o=>({...o})), margen:state.presupuesto.margen, descuento:state.presupuesto.descuento, iva:state.presupuesto.iva, redondeo:state.presupuesto.redondeo, validez:state.presupuesto.validez, condiciones:state.presupuesto.condiciones }
   };
   const jobs=getJobs();
   const idx=jobs.findIndex(x=>x.id===job.id);
@@ -2111,6 +2170,39 @@ function renderLib(){
   cont.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ const [t,i]=b.dataset.del.split(':'); const l=getPresets(); (t==='ch'?l.chapas:l.canos).splice(+i,1); setPresets(l); renderLib(); renderPresetSelects(); });
 }
 
+/* ===================== DATOS DE EMPRESA (membrete) ===================== */
+const EMPRESA_KEY='opticorte_empresa';
+let empresaLogo=null;
+function getEmpresa(){ try{ return JSON.parse(localStorage.getItem(EMPRESA_KEY)||'{}'); }catch(_){ return {}; } }
+function setEmpresa(e){ try{ localStorage.setItem(EMPRESA_KEY, JSON.stringify(e)); return true; }catch(_){ toast('No se pudo guardar (¿logo muy grande?)','err'); return false; } }
+function openEmpresa(){
+  const e=getEmpresa();
+  $('emp-nombre').value=e.nombre||''; $('emp-cuit').value=e.cuit||''; $('emp-tel').value=e.telefono||'';
+  $('emp-email').value=e.email||''; $('emp-web').value=e.web||''; $('emp-dir').value=e.direccion||'';
+  empresaLogo=e.logo||null; updateLogoPreview();
+  $('empresa-modal').classList.remove('hidden');
+}
+function closeEmpresa(){ $('empresa-modal').classList.add('hidden'); }
+function updateLogoPreview(){ const img=$('emp-logo-preview'); if(empresaLogo){ img.src=empresaLogo; img.style.display='block'; } else { img.style.display='none'; } }
+function empresaLogoUpload(ev){
+  const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+  if(f.size>500*1024){ toast('El logo es muy grande (máx 500KB)','err'); ev.target.value=''; return; }
+  const r=new FileReader(); r.onload=()=>{ empresaLogo=r.result; updateLogoPreview(); }; r.readAsDataURL(f); ev.target.value='';
+}
+function removeEmpresaLogo(){ empresaLogo=null; updateLogoPreview(); }
+function saveEmpresa(){
+  const e={ nombre:$('emp-nombre').value.trim(), cuit:$('emp-cuit').value.trim(), telefono:$('emp-tel').value.trim(),
+    email:$('emp-email').value.trim(), web:$('emp-web').value.trim(), direccion:$('emp-dir').value.trim(), logo:empresaLogo||'' };
+  if(setEmpresa(e)){ closeEmpresa(); toast('Datos de empresa guardados','ok'); }
+}
+
+function nextPresuNumber(){
+  let best=null;
+  getJobs().forEach(j=>{ const mt=String(j.presupuesto&&j.presupuesto.numero||'').match(/^(.*?)(\d+)\s*$/); if(mt){ const v=parseInt(mt[2]); if(best===null||v>best.n) best={prefix:mt[1],n:v,pad:mt[2].length}; } });
+  if(!best) return 'PRES-0001';
+  return best.prefix+String(best.n+1).padStart(best.pad,'0');
+}
+
 /* ===================== PRESUPUESTO / COTIZACIÓN ===================== */
 function calcPresupuesto(){
   const p=state.presupuesto;
@@ -2122,18 +2214,27 @@ function calcPresupuesto(){
   const costo=matCost+mo+otros;
   const margen=parseFloat(p.margen)||0;
   const utilidad=costo*margen/100;
-  const neto=costo+utilidad;
+  const bruto=costo+utilidad;                 // neto con margen, antes de descuento
+  const descuento=parseFloat(p.descuento)||0;
+  const descMonto=bruto*descuento/100;
+  const neto=bruto-descMonto;                 // neto a facturar (sin IVA)
   const iva=parseFloat(p.iva)||0;
   const ivaMonto=neto*iva/100;
-  const total=neto+ivaMonto;
+  let total=neto+ivaMonto;
+  const red=parseFloat(p.redondeo)||0;
+  const totalSinRedondeo=total;
+  if(red>0) total=Math.round(total/red)*red;
   const factor=1+margen/100;
-  return { matCost, mo, otros, costo, margen, utilidad, neto, iva, ivaMonto, total, factor };
+  return { matCost, mo, otros, costo, margen, utilidad, bruto, descuento, descMonto, neto, iva, ivaMonto, totalSinRedondeo, total, red, factor };
 }
 
 function openPresupuesto(){
   const p=state.presupuesto;
+  if(!String(p.numero||'').trim()) p.numero=nextPresuNumber();
+  $('presu-numero').value=p.numero;
   $('presu-horas').value=p.moHoras; $('presu-valor').value=p.moValor;
-  $('presu-margen').value=p.margen; $('presu-iva').value=p.iva;
+  $('presu-margen').value=p.margen; $('presu-descuento').value=p.descuento; $('presu-iva').value=p.iva;
+  $('presu-redondeo').value=p.redondeo||0;
   $('presu-validez').value=p.validez; $('presu-cond').value=p.condiciones;
   renderOtros(); refreshPresupuesto();
   $('presu-modal').classList.remove('hidden');
@@ -2158,11 +2259,16 @@ function refreshPresupuesto(){
   $('presu-mat').textContent=money(c.matCost);
   $('presu-mo').textContent=money(c.mo);
   $('pb-costo').textContent=money(c.costo);
+  $('pb-margenpct').textContent=fmt(c.margen);
   $('pb-utilidad').textContent=money(c.utilidad);
+  const dr=$('pb-desc-row'); if(dr) dr.style.display=c.descuento>0?'flex':'none';
+  $('pb-descpct').textContent=fmt(c.descuento);
+  $('pb-desc').textContent='−'+money(c.descMonto);
   $('pb-neto').textContent=money(c.neto);
   $('pb-ivapct').textContent=fmt(c.iva);
   $('pb-iva').textContent=money(c.ivaMonto);
   $('pb-total').textContent=money(c.total);
+  const rn=$('pb-redondeo-note'); if(rn) rn.style.display=(c.red>0 && Math.abs(c.total-c.totalSinRedondeo)>0.005)?'inline':'none';
 }
 
 async function exportPresupuestoPDF(){
@@ -2170,25 +2276,44 @@ async function exportPresupuestoPDF(){
   const c=calcPresupuesto();
   if(c.total<=0){ toast('Cargá precios de material o mano de obra primero','err'); return; }
   const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
-  const p=state.presupuesto;
+  const p=state.presupuesto; const emp=getEmpresa();
   const proj=$('projectName').value, ot=$('meta-ot').value.trim()||'—', oc=$('meta-oc').value.trim()||'—', cliente=$('meta-cliente').value.trim()||'—';
+  const numero=(p.numero||'').trim()||'—';
   const fecha=new Date(); const fechaStr=fecha.toLocaleDateString('es-AR');
   const venc=new Date(fecha.getTime()+(parseInt(p.validez)||0)*86400000).toLocaleDateString('es-AR');
   const PW=210, M=16; let y=0;
 
-  // encabezado
-  doc.setFillColor(30,111,217); doc.rect(0,0,PW,26,'F');
-  doc.setFillColor(245,130,32); doc.rect(0,24,PW,2,'F');
-  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text('OPTICORTE',M,12);
-  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text('Software de Optimización Industrial',M,17.5);
-  doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.text('PRESUPUESTO',PW-M,12,{align:'right'});
-  doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.text('N° OT: '+ot,PW-M,18,{align:'right'});
-  y=36;
+  // ===== membrete de la empresa =====
+  let tx=M;
+  if(emp.logo){
+    try{ const props=doc.getImageProperties(emp.logo); const lh=15; let lw=lh*(props.width/props.height); if(lw>45)lw=45;
+      const ifmt=emp.logo.indexOf('image/jpeg')>=0?'JPEG':'PNG';
+      doc.addImage(emp.logo,ifmt,M,9,lw,lh); tx=M+lw+5; }catch(_){ tx=M; }
+  }
+  let cy=13;
+  doc.setTextColor(30,40,55); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text(emp.nombre||'Tu empresa', tx, cy); cy+=4.6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.8); doc.setTextColor(90,100,115);
+  const l1=[]; if(emp.cuit) l1.push('CUIT: '+emp.cuit); if(emp.direccion) l1.push(emp.direccion);
+  const l2=[]; if(emp.telefono) l2.push('Tel: '+emp.telefono); if(emp.email) l2.push(emp.email); if(emp.web) l2.push(emp.web);
+  if(l1.length){ doc.text(l1.join('  ·  '),tx,cy); cy+=3.6; }
+  if(l2.length){ doc.text(l2.join('  ·  '),tx,cy); cy+=3.6; }
 
-  // datos cliente / fecha
+  // bloque derecho
+  doc.setTextColor(30,111,217); doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.text('PRESUPUESTO',PW-M,13,{align:'right'});
+  doc.setTextColor(60,70,85); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text('N° '+numero,PW-M,19,{align:'right'}); doc.text('Fecha: '+fechaStr,PW-M,23.5,{align:'right'});
+
+  // divisor
+  const hy=Math.max(cy+1,27);
+  doc.setDrawColor(30,111,217); doc.setLineWidth(0.6); doc.line(M,hy,PW-M,hy);
+  doc.setDrawColor(245,130,32); doc.line(M,hy+1.1,PW-M,hy+1.1);
+  y=hy+9;
+
+  // datos del trabajo
   doc.setTextColor(40,50,65); doc.setFontSize(10);
   doc.setFont('helvetica','bold'); doc.text('Cliente:',M,y); doc.setFont('helvetica','normal'); doc.text(cliente,M+20,y);
-  doc.setFont('helvetica','bold'); doc.text('Fecha:',PW-M-42,y); doc.setFont('helvetica','normal'); doc.text(fechaStr,PW-M,y,{align:'right'}); y+=6;
+  doc.setFont('helvetica','bold'); doc.text('N° OT:',PW-M-42,y); doc.setFont('helvetica','normal'); doc.text(ot,PW-M,y,{align:'right'}); y+=6;
   doc.setFont('helvetica','bold'); doc.text('Proyecto:',M,y); doc.setFont('helvetica','normal'); doc.text(proj,M+20,y);
   doc.setFont('helvetica','bold'); doc.text('N° OC:',PW-M-42,y); doc.setFont('helvetica','normal'); doc.text(oc,PW-M,y,{align:'right'}); y+=10;
 
@@ -2207,11 +2332,12 @@ async function exportPresupuestoPDF(){
   doc.setDrawColor(210,218,232); doc.line(M,y,PW-M,y); y+=6;
 
   // totales
-  const tright=(lbl,val,bold,big)=>{ doc.setFont('helvetica',bold?'bold':'normal'); doc.setFontSize(big?12:10);
-    doc.text(lbl,PW-M-58,y,{align:'left'}); doc.text(money(val),PW-M-3,y,{align:'right'}); y+=big?8:6; };
-  tright('Subtotal (neto):', c.neto, false, false);
+  const tright=(lbl,val,bold,big,neg)=>{ doc.setFont('helvetica',bold?'bold':'normal'); doc.setFontSize(big?12:10);
+    doc.text(lbl,PW-M-62,y,{align:'left'}); doc.text((neg?'−':'')+money(val),PW-M-3,y,{align:'right'}); y+=big?8:6; };
+  tright('Subtotal:', c.bruto, false, false);
+  if(c.descuento>0) tright('Descuento '+fmt(c.descuento)+'%:', c.descMonto, false, false, true);
   if(c.iva>0) tright('IVA '+fmt(c.iva)+'%:', c.ivaMonto, false, false);
-  doc.setFillColor(255,242,230); doc.rect(PW-M-72,y-4,72,10,'F');
+  doc.setFillColor(255,242,230); doc.rect(PW-M-78,y-4.5,78,10.5,'F');
   doc.setTextColor(224,106,10); tright('TOTAL:', c.total, true, true);
   doc.setTextColor(40,50,65); y+=4;
 
@@ -2224,9 +2350,9 @@ async function exportPresupuestoPDF(){
     doc.splitTextToSize(p.condiciones.trim(),PW-2*M).forEach(l=>{ doc.text(l,M,y); y+=4.5; });
   }
   // pie
-  doc.setFontSize(7.5); doc.setTextColor(150,160,175);
-  doc.text('Generado por OptiCorte v1.0 · '+fechaStr,M,290);
-  doc.save(`Presupuesto_${ot.replace(/[^\w\-]+/g,'_')}.pdf`);
+  doc.setFontSize(7); doc.setTextColor(170,178,190);
+  doc.text((emp.nombre?emp.nombre+' · ':'')+'Presupuesto '+numero+' · '+fechaStr,M,290);
+  doc.save(`Presupuesto_${numero.replace(/[^\w\-]+/g,'_')}.pdf`);
   toast('Presupuesto PDF descargado','ok');
 }
 
@@ -2325,6 +2451,7 @@ function init(){
   $('paste-modal').addEventListener('click', e=>{ if(e.target.id==='paste-modal') closePaste(); });
   $('presu-modal').addEventListener('click', e=>{ if(e.target.id==='presu-modal') closePresupuesto(); });
   $('lib-modal').addEventListener('click', e=>{ if(e.target.id==='lib-modal') closeLib(); });
+  $('empresa-modal').addEventListener('click', e=>{ if(e.target.id==='empresa-modal') closeEmpresa(); });
   seedPresets(); renderPresetSelects();
   ['projectName','meta-ot','meta-oc','meta-cliente'].forEach(id=>$(id).addEventListener('input',markDirty));
   window.addEventListener('beforeunload', e=>{ if(isDirty){ e.preventDefault(); e.returnValue=''; } });
@@ -2352,7 +2479,8 @@ return { switchTab, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte
          saveJob, openJobs, closeJobs, loadJob, deleteJob, newJob, filterJobs,
          openPaste, closePaste, importPaste, exportJobsFile, importJobsFile,
          installApp, openPresupuesto, closePresupuesto, pField, addOtro, delOtro, editOtro, exportPresupuestoPDF,
-         applyChPreset, applyCaPreset, saveChPreset, saveCaPreset, openLib, closeLib };
+         applyChPreset, applyCaPreset, saveChPreset, saveCaPreset, openLib, closeLib,
+         openEmpresa, closeEmpresa, saveEmpresa, empresaLogoUpload, removeEmpresaLogo };
 })();
 </script>
 </body>
