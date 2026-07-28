@@ -597,6 +597,55 @@ input{font-family:inherit}
   .panel-left{width:340px}
   .kpi .k-value{font-size:26px}
 }
+
+/* ===== MÓVIL / TABLET ===== */
+@media (max-width:860px){
+  .header{height:auto;flex-wrap:wrap;padding:10px 14px;gap:8px 12px}
+  .brand-tag{display:none}
+  .project-wrap{order:5;width:100%;margin-left:0}
+  .header-actions{margin-left:0;flex-wrap:wrap;gap:8px}
+  .header-actions .btn{padding:9px 12px;font-size:12.5px}
+  .user-box{margin-left:auto;padding-left:0;border-left:none}
+  .print-dropdown{left:auto;right:0}
+
+  .meta-bar{padding:10px 14px;gap:10px}
+  .meta-bar .mb-title{width:100%}
+  .meta-field{flex:1 1 auto}
+  .meta-field.cliente{flex-basis:100%}
+  .meta-actions{margin-left:0;width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .meta-actions .btn-meta{flex:1 1 auto;justify-content:center}
+  .toast{max-width:calc(100vw - 28px);right:14px;left:auto}
+
+  .tabbar{padding:12px 12px 0;gap:4px}
+  .tab{padding:11px 14px;font-size:13.5px}
+  .tab-long{display:none}
+
+  .workspace.active{flex-direction:column;padding:14px;gap:14px}
+  .panel-left{width:100%;position:static;top:auto}
+  .panel-right{width:100%}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .viz-head{flex-wrap:wrap;gap:8px}
+  .viz-tools{width:100%;justify-content:space-between}
+  .mat-sec-title{font-size:15px;flex-wrap:wrap}
+
+  .modal-overlay{padding:10px}
+  .modal-card{max-height:94vh}
+  .modal-foot{flex-wrap:wrap}
+  .presu-field2,.presu-field3,.presu-toprow{flex-wrap:wrap}
+  .presu-field2>div,.presu-field3>div{flex:1 1 42%;min-width:120px}
+  .presu-toprow .empresa-btn{width:100%!important}
+  .presu-num{flex-basis:100%}
+  .cost-strip{gap:8px 16px}
+  .cost-strip .cs-item.muted{margin-left:0}
+}
+@media (max-width:480px){
+  .brand-name{font-size:19px}
+  .badge{display:none}
+  .kpi .k-value{font-size:24px}
+  .viz-canvas{padding:10px}
+  .btn-install,.btn-excel,.btn-pdf{padding:9px 11px}
+  .tbl-result th,.tbl-result td{padding:8px 8px;font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -779,10 +828,10 @@ input{font-family:inherit}
 
 <nav class="tabbar">
   <button class="tab active" data-tab="chapas" onclick="OptiCorte.switchTab('chapas')">
-    <span class="ico">✂</span> CHAPAS — Optimización 2D
+    <span class="ico">✂</span> CHAPAS <span class="tab-long">— Optimización 2D</span>
   </button>
   <button class="tab" data-tab="canos" onclick="OptiCorte.switchTab('canos')">
-    <span class="ico">⬛</span> CAÑOS / PERFILES — Optimización 1D
+    <span class="ico">⬛</span> CAÑOS/PERFILES <span class="tab-long">— Optimización 1D</span>
   </button>
 </nav>
 
