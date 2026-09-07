@@ -2,3 +2,7 @@
 *.log
 .DS_Store
 Thumbs.db
+
+# Herramientas locales
+.wrangler/
+.claude/
