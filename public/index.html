@@ -246,7 +246,21 @@ input{font-family:inherit}
 /* ===== LAYOUT ===== */
 .workspace{display:none;gap:20px;padding:20px 24px 40px;align-items:flex-start}
 .workspace.active{display:flex}
-.panel-left{width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;position:sticky;top:84px}
+.panel-left{
+  width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;
+  position:sticky;top:84px;
+  max-height:calc(100vh - 104px);
+  overflow-y:auto;overflow-x:hidden;
+  padding:2px 10px 2px 2px;margin:-2px -10px -2px -2px;
+  scrollbar-width:thin;scrollbar-color:#c3ccdb transparent;
+  overscroll-behavior:contain;
+}
+.panel-left::-webkit-scrollbar{width:9px}
+.panel-left::-webkit-scrollbar-track{background:transparent}
+.panel-left::-webkit-scrollbar-thumb{background:#c3ccdb;border-radius:9px;border:2px solid var(--bg)}
+.panel-left::-webkit-scrollbar-thumb:hover{background:#9aa7bd}
+.panel-left>*{flex-shrink:0}
+.panel-left>.btn-calc{position:sticky;bottom:0;z-index:5}
 .panel-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
 
 .card{
@@ -562,6 +576,15 @@ input{font-family:inherit}
 .print-only{display:none}
 #print-header{display:none}
 #labels-sheet{display:none}
+#req-sheet{display:none}
+#req-sheet .req-card{border:1px solid #cdd4e0;border-radius:8px;padding:10px 12px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+#req-sheet .req-title{font-weight:700;font-size:12.5px;color:#1B2535;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+#req-sheet .req-dot{display:inline-block;width:10px;height:10px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,.2);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#req-sheet table{width:100%;border-collapse:collapse;font-size:11.5px}
+#req-sheet th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#69768B;border-bottom:1px solid #cdd4e0;padding:4px 6px}
+#req-sheet td{padding:4px 6px;border-bottom:1px solid #eef1f6;color:#1B2535}
+#req-sheet tr.req-total td{font-weight:700;border-top:1px solid #cdd4e0;border-bottom:none}
+#req-sheet .req-head{font-weight:700;font-size:13px;color:#1E6FD9;margin:0 0 8px}
 .label-card{border:1px solid #cdd4e0;border-left:5px solid var(--blue);border-radius:6px;padding:8px 11px;break-inside:avoid;page-break-inside:avoid}
 .label-card .lc-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .label-card .lc-code{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:#1B2535;word-break:break-word;display:flex;align-items:center;gap:6px}
@@ -591,6 +614,7 @@ input{font-family:inherit}
   body.pm-labels #print-header{ display:none !important; }
   body.pm-labels .workspace{ display:none !important; }
   body.pm-labels #labels-sheet{ display:grid !important; grid-template-columns:repeat(3,1fr); gap:5mm; }
+  body.pm-all #req-sheet, body.pm-route #req-sheet, body.pm-diagram #req-sheet{ display:block !important; margin-bottom:14px; }
 }
 
 @media (max-width:1320px){
@@ -621,7 +645,8 @@ input{font-family:inherit}
   .tab-long{display:none}
 
   .workspace.active{flex-direction:column;padding:14px;gap:14px}
-  .panel-left{width:100%;position:static;top:auto}
+  .panel-left{width:100%;position:static;top:auto;max-height:none;overflow:visible;padding:0;margin:0}
+  .panel-left>.btn-calc{position:static}
   .panel-right{width:100%}
   .kpi-row{grid-template-columns:1fr 1fr}
   .viz-head{flex-wrap:wrap;gap:8px}
@@ -844,6 +869,8 @@ input{font-family:inherit}
   </div>
   <div id="print-section" style="font-weight:700;font-size:13px;margin-top:8px;color:#1E6FD9"></div>
 </div>
+
+<div id="req-sheet"></div>
 
 <nav class="tabbar">
   <button class="tab active" data-tab="chapas" onclick="OptiCorte.switchTab('chapas')">
@@ -2081,6 +2108,53 @@ function importJobsFile(e){
 function togglePrintMenu(){ $('print-dropdown').classList.toggle('show'); }
 function closePrintMenu(){ $('print-dropdown').classList.remove('show'); }
 
+/* Lista de piezas / cortes requeridos (para imprimir junto al documento) */
+function buildReqSheet(){
+  const isChapas = state.activeTab==='chapas';
+  const mats = isChapas ? state.chapas.mats : state.canos.mats;
+  let html='', any=false;
+
+  mats.forEach((m,mi)=>{
+    const label = isChapas ? chLabel(m,mi) : caLabel(m,mi);
+    const items = (isChapas ? m.piezas : m.cortes) || [];
+    let rows='', nItems=0, totMM=0, totM2=0;
+
+    items.forEach(it=>{
+      const largo=parseFloat(it.largo), cant=parseInt(it.cant)||1;
+      if(!(largo>0)) return;
+      if(isChapas){
+        const ancho=parseFloat(it.ancho); if(!(ancho>0)) return;
+        nItems+=cant; totM2 += (largo*ancho*cant)/1e6;
+        rows+=`<tr><td>${esc(it.codigo||'(s/cód)')}</td><td>${largo}</td><td>${ancho}</td><td>${cant}</td><td>${it.rot===false?'No (veta)':'Sí'}</td></tr>`;
+      } else {
+        nItems+=cant; totMM += largo*cant;
+        rows+=`<tr><td>${esc(it.codigo||'(s/cód)')}</td><td>${largo}</td><td>${cant}</td><td>${fmt(largo*cant)}</td></tr>`;
+      }
+    });
+
+    if(!rows) return;
+    any=true;
+    const sub = isChapas ? `chapa ${m.largo}×${m.ancho} mm` : `barra ${m.largo} mm`;
+    html+=`<div class="req-card">
+      <div class="req-title"><span class="req-dot" style="background:${m.color}"></span>${esc(label)} <span style="font-weight:500;color:#69768B">· ${sub}</span></div>
+      <table>
+        <thead>${isChapas
+          ? '<tr><th>Código</th><th>Largo (mm)</th><th>Ancho (mm)</th><th>Cant.</th><th>Rotable</th></tr>'
+          : '<tr><th>Código</th><th>Largo (mm)</th><th>Cant.</th><th>Total (mm)</th></tr>'}</thead>
+        <tbody>${rows}
+          ${isChapas
+            ? `<tr class="req-total"><td>TOTAL</td><td colspan="2">${fmt(totM2)} m²</td><td>${nItems}</td><td></td></tr>`
+            : `<tr class="req-total"><td>TOTAL</td><td></td><td>${nItems}</td><td>${fmt(totMM)}</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  $('req-sheet').innerHTML = any
+    ? `<div class="req-head">${isChapas?'Lista de piezas requeridas':'Lista de cortes requeridos'}</div>`+html
+    : '';
+}
+
 function print(mode){          // mode: 'all' | 'route' | 'diagram'
   closePrintMenu();
   const isChapas = state.activeTab==='chapas';
@@ -2116,6 +2190,7 @@ function print(mode){          // mode: 'all' | 'route' | 'diagram'
          <div class="lc-dim">${esc(l.dim)}</div>
          <div class="lc-meta">${esc(l.mat)}${otNum?(' · OT '+esc(otNum)):''}</div>
        </div>`).join('');
+    $('req-sheet').innerHTML='';
     document.body.classList.remove('pm-all','pm-diagram','pm-route','pm-labels');
     document.body.classList.add('pm-labels');
     setTimeout(()=>window.print(), 80);
@@ -2145,7 +2220,9 @@ function print(mode){          // mode: 'all' | 'route' | 'diagram'
   $('print-cliente').textContent = $('meta-cliente').value.trim() || '—';
   $('print-section').textContent = tabName + '  ·  ' + secLabel;
 
-  document.body.classList.remove('pm-all','pm-diagram','pm-route');
+  buildReqSheet();
+
+  document.body.classList.remove('pm-all','pm-diagram','pm-route','pm-labels');
   document.body.classList.add('pm-'+mode);
   setTimeout(()=>window.print(), 80);
 }
