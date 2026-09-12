@@ -1314,6 +1314,57 @@ function splitFree(free, used){
   return result;
 }
 
+/* Empaqueta instancias en chapas (maxrects). opts.score: bssf|blsf|baf|bl · opts.mode: global|seq */
+function packSheets(instances, opts){
+  const {usableW,usableH,margen,gap,score,mode}=opts;
+  const scoreOf=(f,fw,fh)=>{
+    const leftH=f.w-fw, leftV=f.h-fh;
+    switch(score){
+      case 'blsf': return [Math.max(leftH,leftV), Math.min(leftH,leftV)];
+      case 'baf':  return [f.w*f.h-fw*fh, Math.min(leftH,leftV)];
+      case 'bl':   return [f.y, f.x];
+      default:     return [Math.min(leftH,leftV), Math.max(leftH,leftV)]; // bssf
+    }
+  };
+  const better=(a,b)=>!b || a[0]<b[0]-1e-9 || (Math.abs(a[0]-b[0])<1e-9 && a[1]<b[1]);
+  const sheets=[];
+  let remaining=instances.slice();
+  while(remaining.length){
+    const sheet={ free:[{x:margen,y:margen,w:usableW,h:usableH}], placed:[] };
+    let placedAny=true;
+    while(placedAny && remaining.length){
+      placedAny=false;
+      let best=null;
+      for(let pi=0; pi<remaining.length; pi++){
+        const inst=remaining[pi];
+        const orients=[{w:inst.w,h:inst.h,rot:false}];
+        if(inst.rot) orients.push({w:inst.h,h:inst.w,rot:true});
+        for(const o of orients){
+          const fw=o.w+gap, fh=o.h+gap; // footprint con gap
+          for(const f of sheet.free){
+            if(fw<=f.w+1e-6 && fh<=f.h+1e-6){
+              const sc=scoreOf(f,fw,fh);
+              if(!best || better(sc,best.sc)) best={pi,inst,o,f,fw,fh,sc};
+            }
+          }
+        }
+        // secuencial: la primera pieza (en el orden dado) que entra se ubica en su mejor lugar
+        if(mode==='seq' && best) break;
+      }
+      if(best){
+        const used={x:best.f.x,y:best.f.y,w:best.fw,h:best.fh};
+        sheet.placed.push({n:best.inst.n,code:best.inst.code,x:best.f.x,y:best.f.y,w:best.o.w,h:best.o.h,rot:best.o.rot});
+        sheet.free=splitFree(sheet.free,used);
+        remaining.splice(best.pi,1);
+        placedAny=true;
+      }
+    }
+    if(!sheet.placed.length) break; // seguridad
+    sheets.push(sheet);
+  }
+  return sheets;
+}
+
 function computeChapa(mat){
   const L=parseFloat(mat.largo)||0, W=parseFloat(mat.ancho)||0;
   const gap=parseFloat(mat.gap)||0, margen=parseFloat(mat.margen)||0, esp=(mat.espesor||'').trim();
@@ -1337,46 +1388,43 @@ function computeChapa(mat){
     for(let k=0;k<q;k++){ pieceNo++; instances.push({n:pieceNo,code,w:pw,h:ph,rot,area:pw*ph}); }
   });
   const pieces = instances.map(i=>({n:i.n,code:i.code,w:i.w,h:i.h}));
-  instances.sort((a,b)=>b.area-a.area);
 
-  const sheets=[];
-  let remaining=instances.slice();
-
-  while(remaining.length){
-    const sheet={ free:[{x:margen,y:margen,w:usableW,h:usableH}], placed:[] };
-    let placedAny=true;
-    while(placedAny && remaining.length){
-      placedAny=false;
-      // elegir globalmente la mejor (pieza, rect, orientación) por Best Short Side Fit
-      let best=null;
-      for(let pi=0; pi<remaining.length; pi++){
-        const inst=remaining[pi];
-        const orients=[{w:inst.w,h:inst.h,rot:false}];
-        if(inst.rot) orients.push({w:inst.h,h:inst.w,rot:true});
-        for(const o of orients){
-          const fw=o.w+gap, fh=o.h+gap; // footprint con gap
-          for(const f of sheet.free){
-            if(fw<=f.w+1e-6 && fh<=f.h+1e-6){
-              const leftH=f.w-fw, leftV=f.h-fh;
-              const shortFit=Math.min(leftH,leftV), longFit=Math.max(leftH,leftV);
-              if(!best || shortFit<best.shortFit-1e-9 || (Math.abs(shortFit-best.shortFit)<1e-9 && longFit<best.longFit)){
-                best={pi,inst,o,f,fw,fh,shortFit,longFit};
-              }
-            }
-          }
-        }
-      }
-      if(best){
-        const used={x:best.f.x,y:best.f.y,w:best.fw,h:best.fh};
-        sheet.placed.push({n:best.inst.n,code:best.inst.code,x:best.f.x,y:best.f.y,w:best.o.w,h:best.o.h,rot:best.o.rot});
-        sheet.free=splitFree(sheet.free,used);
-        remaining.splice(best.pi,1);
-        placedAny=true;
-      }
+  // Se prueban varias estrategias (orden × heurística × modo) y se conserva la que usa
+  // menos chapas; a igual cantidad, la que deja el retazo más grande en la última chapa.
+  const ORDERS = {
+    area:   (a,b)=>b.area-a.area,
+    lado:   (a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h) || b.area-a.area,
+    perim:  (a,b)=>(b.w+b.h)-(a.w+a.h) || b.area-a.area,
+    alto:   (a,b)=>b.h-a.h || b.w-a.w,
+    ancho:  (a,b)=>b.w-a.w || b.h-a.h,
+  };
+  const STRATS = [
+    {order:'area',  score:'bssf', mode:'global'},
+    {order:'area',  score:'baf',  mode:'global'},
+    {order:'area',  score:'blsf', mode:'global'},
+    {order:'area',  score:'bssf', mode:'seq'},
+    {order:'lado',  score:'bssf', mode:'seq'},
+    {order:'perim', score:'baf',  mode:'seq'},
+    {order:'alto',  score:'bl',   mode:'seq'},
+    {order:'ancho', score:'bl',   mode:'seq'},
+    {order:'area',  score:'bl',   mode:'global'},
+    {order:'area',  score:'baf',  mode:'seq'},
+    {order:'lado',  score:'bl',   mode:'seq'},
+    {order:'perim', score:'bssf', mode:'seq'},
+    {order:'alto',  score:'bssf', mode:'seq'},
+  ];
+  let bestRun=null;
+  for(const st of STRATS){
+    const inst = instances.slice().sort(ORDERS[st.order]);
+    const sheets = packSheets(inst, {usableW,usableH,margen,gap,score:st.score,mode:st.mode});
+    const last = sheets[sheets.length-1];
+    const retazoArea = last ? last.free.reduce((m,f)=>Math.max(m,f.w*f.h),0) : 0;
+    if(!bestRun || sheets.length<bestRun.sheets.length || (sheets.length===bestRun.sheets.length && retazoArea>bestRun.retazoArea)){
+      bestRun={sheets,retazoArea,strategy:st};
     }
-    if(!sheet.placed.length) break; // seguridad
-    sheets.push(sheet);
   }
+  const sheets=bestRun.sheets;
+  const strategy=`${bestRun.strategy.order}/${bestRun.strategy.score}/${bestRun.strategy.mode}`, nStrats=STRATS.length;
 
   // métricas
   const sheetArea=L*W;
@@ -1398,7 +1446,7 @@ function computeChapa(mat){
   const pesoKg = totalM2 * espMM * dens;       // m² · mm · (kg/dm³) = kg
   const costo  = totalM2 * precioM2;
 
-  return { L,W,esp,gap,margen,veta,usableW,usableH,sheets,colorMap,pieces,
+  return { L,W,esp,gap,margen,veta,usableW,usableH,sheets,colorMap,pieces,strategy,nStrats,
     kpi:{ nSheets:sheets.length, avgUtil, waste:100-avgUtil, placed:totalPlaced, req:totalReq },
     cost:{ totalM2, pesoKg, costo, hasW:espMM>0&&dens>0, hasC:precioM2>0 },
     noFit };
@@ -1443,7 +1491,7 @@ function renderChapasResult(){
     html+=`<div class="mat-section">`;
     if(multi) html+=`<div class="mat-sec-title"><span class="dot" style="background:${m.color}"></span>${esc(chLabel(m,i))} <span class="muted">· ${r.L}×${r.W} mm${r.esp?(' · '+esc(r.esp)):''}</span></div>`;
     html+=`<div class="kpi-row">
-      <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub">${esc(r.esp||'—')}</div></div>
+      <div class="kpi"><div class="k-label">Chapas necesarias</div><div class="k-value">${k.nSheets}</div><div class="k-sub" title="Estrategia ganadora: ${esc(r.strategy||'')}">${esc(r.esp||'—')} · mejor de ${r.nStrats} estrategias</div></div>
       <div class="kpi k-green"><div class="k-label">Aprovechamiento prom.</div><div class="k-value">${fmt(k.avgUtil)}%</div><div class="k-sub">${r.L}×${r.W} mm</div></div>
       <div class="kpi k-red"><div class="k-label">Material desperdiciado</div><div class="k-value">${fmt(k.waste)}%</div><div class="k-sub">incluye gap y márgenes</div></div>
       <div class="kpi k-orange"><div class="k-label">Piezas ubicadas</div><div class="k-value">${k.placed}<span style="font-size:18px;color:var(--text-secondary)">/${k.req}</span></div><div class="k-sub">${k.placed<k.req?'⚠ faltan ubicar':'✓ todas ubicadas'}</div></div>
@@ -1566,6 +1614,67 @@ function zoomSheet(matId,factor){
 }
 
 /* ===================== ALGORITMO 1D — FFD ===================== */
+/* ---- 1D: empaquetado por ajuste (first-fit / best-fit), piezas ya ordenadas desc ---- */
+function packBarsFit(pieces, barL, kerf, mode){
+  const bars=[];
+  pieces.forEach(p=>{
+    const need=p.len+kerf; // el disco consume material por corte
+    let target=null;
+    for(const bar of bars){
+      if(bar.remaining >= need-1e-9){
+        if(mode==='first'){ target=bar; break; }
+        if(!target || bar.remaining<target.remaining) target=bar; // best-fit: la que quede más justa
+      }
+    }
+    if(!target){ target={remaining:barL,cuts:[]}; bars.push(target); }
+    target.cuts.push(p); target.remaining-=need;
+  });
+  return bars;
+}
+
+/* ---- 1D: búsqueda de patrones. Para cada barra nueva se busca (knapsack acotado por DP) la
+   combinación de cortes pendientes que más llena la barra; el patrón se repite mientras haya
+   piezas. Se omite si el largo escalado a enteros es muy grande (se usa el resultado de FFD/BFD). ---- */
+function packBarsPatterns(pieces, barL, kerf){
+  const isInt=v=>Math.abs(v-Math.round(v))<1e-9;
+  let scale=1;
+  if(![barL,kerf,...pieces.map(p=>p.len)].every(isInt)) scale=10;
+  const cap=Math.round(barL*scale);
+  if(cap>200000) return null;
+
+  // agrupar por (código, largo) con stock de piezas
+  const groups=[]; const gIdx={};
+  pieces.forEach(p=>{ const k=p.code+'@'+p.len; if(gIdx[k]===undefined){ gIdx[k]=groups.length; groups.push({w:Math.round((p.len+kerf)*scale),stock:[]}); } groups[gIdx[k]].stock.push(p); });
+
+  const bars=[];
+  let left=pieces.length;
+  while(left>0){
+    // ítems 0/1 por descomposición binaria de cada grupo
+    const items=[];
+    groups.forEach((g,gi)=>{ let q=g.stock.length, m=1; while(q>0){ const t=Math.min(m,q); items.push({w:g.w*t,g:gi,t}); q-=t; m*=2; } });
+    const parent=new Int32Array(cap+1).fill(-1); // índice de ítem con que se alcanzó c
+    const reach=new Uint8Array(cap+1); reach[0]=1;
+    for(let i=0;i<items.length;i++){
+      const w=items[i].w; if(w>cap) continue;
+      for(let c=cap;c>=w;c--){ if(!reach[c] && reach[c-w]){ reach[c]=1; parent[c]=i; } }
+    }
+    let bestC=cap; while(bestC>0 && !reach[bestC]) bestC--;
+    if(bestC===0) break; // ninguna pieza entra (no debería pasar: ya se filtró len>barL)
+    // reconstruir patrón → cantidades por grupo
+    const cnt=new Array(groups.length).fill(0);
+    for(let c=bestC;c>0;){ const it=items[parent[c]]; cnt[it.g]+=it.t; c-=it.w; }
+    // repetir el patrón mientras alcance el stock
+    let reps=Infinity; cnt.forEach((n,gi)=>{ if(n>0) reps=Math.min(reps,Math.floor(groups[gi].stock.length/n)); });
+    for(let r=0;r<reps;r++){
+      const bar={remaining:barL,cuts:[]};
+      cnt.forEach((n,gi)=>{ for(let k=0;k<n;k++){ const p=groups[gi].stock.pop(); bar.cuts.push(p); bar.remaining-=(p.len+kerf); left--; } });
+      bar.cuts.sort((a,b)=>b.len-a.len);
+      bars.push(bar);
+    }
+  }
+  return left>0 ? null : bars;
+}
+
 function computeCano(mat){
   const barL=parseFloat(mat.largo)||0, kerf=parseFloat(mat.sangria)||0, reuse=parseFloat(mat.reuse)||0, desc=(mat.desc||'').trim();
   if(barL<=0) return null;
@@ -1581,17 +1690,23 @@ function computeCano(mat){
   const piecesList = pieces.map(p=>({n:p.n,code:p.code,len:p.len}));
   pieces.sort((a,b)=>b.len-a.len);
 
-  const bars=[];
-  pieces.forEach(p=>{
-    let placed=false;
-    for(const bar of bars){
-      // necesita len + kerf (el disco consume material por corte)
-      if(bar.remaining >= p.len+kerf-1e-9){
-        bar.cuts.push(p); bar.remaining-=(p.len+kerf); placed=true; break;
-      }
-    }
-    if(!placed){ bars.push({remaining:barL-(p.len+kerf), cuts:[p]}); }
+  // Varias estrategias; gana la de menos barras, luego menos desperdicio, luego más sobrante útil.
+  const runs=[
+    {name:'FFD',      bars:packBarsFit(pieces,barL,kerf,'first')},
+    {name:'BFD',      bars:packBarsFit(pieces,barL,kerf,'best')},
+    {name:'patrones', bars:packBarsPatterns(pieces,barL,kerf)},
+  ].filter(r=>r.bars);
+  const evalRun=(bars)=>{
+    let desp=0, sobra=0;
+    bars.forEach(b=>{ const used=b.cuts.reduce((s,c)=>s+c.len,0), left=barL-used-b.cuts.length*kerf;
+      if(left>=reuse) sobra+=left; else desp+=Math.max(0,left); });
+    return {n:bars.length,desp,sobra};
+  };
+  let bestRun=null;
+  runs.forEach(r=>{ const e=evalRun(r.bars);
+    if(!bestRun || e.n<bestRun.e.n || (e.n===bestRun.e.n && (e.desp<bestRun.e.desp-1e-9 || (Math.abs(e.desp-bestRun.e.desp)<1e-9 && e.sobra>bestRun.e.sobra)))) bestRun={...r,e};
   });
+  const bars=bestRun.bars, strategy=bestRun.name;
 
   // métricas
   const colorMap={};
@@ -1620,7 +1735,7 @@ function computeCano(mat){
   const pesoKg = totalM * kgM;
   const costo  = totalM * precioM;
 
-  return { barL,kerf,reuse,desc,bars,colorMap,pieces:piecesList,
+  return { barL,kerf,reuse,desc,bars,colorMap,pieces:piecesList,strategy,
     kpi:{ nBars:bars.length, util, desp:totalDesp, sobra:totalSobra },
     cost:{ totalM, pesoKg, costo, hasW:kgM>0, hasC:precioM>0 }, noFit };
 }
@@ -1664,7 +1779,7 @@ function renderCanosResult(){
     html+=`<div class="mat-section">`;
     if(multi) html+=`<div class="mat-sec-title"><span class="dot" style="background:${m.color}"></span>${esc(caLabel(m,mi))} <span class="muted">· barra ${r.barL} mm</span></div>`;
     html+=`<div class="kpi-row">
-      <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub">${esc(r.desc||'—')}</div></div>
+      <div class="kpi k-orange"><div class="k-label">Barras necesarias</div><div class="k-value">${k.nBars}</div><div class="k-sub" title="Estrategia ganadora: ${esc(r.strategy||'')}">${esc(r.desc||'—')} · ${({FFD:'ajuste primero',BFD:'mejor ajuste',patrones:'patrones óptimos'})[r.strategy]||''}</div></div>
       <div class="kpi k-green"><div class="k-label">Aprovechamiento</div><div class="k-value">${fmt(k.util)}%</div><div class="k-sub">barra ${r.barL} mm</div></div>
       <div class="kpi k-red"><div class="k-label">Desperdicio total</div><div class="k-value" style="font-size:24px">${fmt(k.desp)}<span style="font-size:14px"> mm</span></div><div class="k-sub">sangría + retazos &lt; ${r.reuse}mm</div></div>
       <div class="kpi"><div class="k-label">Sobrante útil total</div><div class="k-value" style="font-size:24px">${fmt(k.sobra)}<span style="font-size:14px"> mm</span></div><div class="k-sub">reutilizable ≥ ${r.reuse}mm</div></div>
