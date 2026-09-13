@@ -310,6 +310,39 @@ input{font-family:inherit}
   color:var(--danger);background:var(--danger-light);font-size:14px;font-weight:700;transition:.15s;
 }
 .btn-del:hover{background:var(--danger);color:#fff}
+
+/* validaciones en vivo */
+.tbl-edit tr.row-err input[type=text],.tbl-edit tr.row-err input[type=number]{background:var(--danger-light);border-color:#f3c2bc;color:var(--danger)}
+.tbl-edit td.cell-warn input[type=text]{background:#FFF4E5;border-color:#F5C784}
+.issues{display:none;flex-direction:column;gap:6px;margin-top:10px}
+.issues.show{display:flex}
+.issue{font-size:12px;line-height:1.35;padding:7px 10px;border-radius:7px;border-left:3px solid}
+.issue.err{background:var(--danger-light);border-color:var(--danger);color:#A52A1E}
+.issue.warn{background:#FFF4E5;border-color:#F5A623;color:#8A4B00}
+
+/* deshacer / rehacer */
+.hist-btns{margin-left:auto;display:flex;gap:4px}
+.hist-btns button{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text-secondary);font-size:15px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+.hist-btns button:hover:not(:disabled){color:var(--blue);border-color:var(--blue);background:var(--blue-light)}
+.hist-btns button:disabled{opacity:.35;cursor:default}
+
+/* diagrama: tooltip, cotas, resaltado, PNG */
+#viz-tip{position:fixed;z-index:80;pointer-events:none;display:none;background:#1B2535;color:#fff;font-size:11.5px;line-height:1.45;padding:7px 10px;border-radius:8px;box-shadow:var(--shadow-lg);max-width:260px}
+#viz-tip b{color:#fff;font-size:12.5px}
+#viz-tip .dim{color:#C3CCDB}
+.pz{cursor:pointer;transition:fill-opacity .12s}
+.pz:hover{stroke:#1B2535 !important;stroke-width:2.5 !important}
+.tbl-result tr[data-code]{cursor:pointer}
+.tbl-result tr[data-code]:hover td{background:var(--blue-light)}
+.tbl-result tr.hl-on td{background:#FFF4E5 !important}
+.seq-chip[data-code]{cursor:pointer}
+.seq-chip[data-code]:hover{border-color:var(--blue);color:var(--blue)}
+.seq-chip.hl-on{background:#FFF4E5;border-color:#F5A623}
+.mini-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text-secondary);font-size:11.5px;font-weight:700;transition:.15s;white-space:nowrap}
+.mini-btn:hover{color:var(--blue);border-color:var(--blue);background:var(--blue-light)}
+.nav-btn.png-btn{width:auto;padding:0 10px;font-size:11.5px;letter-spacing:.03em}
+.bar-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.hl-hint{margin-left:auto;font-size:11px;color:var(--text-secondary);font-weight:500}
 .btn-add{
   width:100%;margin-top:12px;padding:9px;border-radius:var(--radius-sm);
   border:1.5px dashed var(--border-strong);color:var(--blue);font-weight:600;font-size:13px;
@@ -602,6 +635,7 @@ input{font-family:inherit}
   .panel-right{ width:100% !important; gap:10px !important; }
   .card{ box-shadow:none !important; border:1px solid #cdd4e0 !important; break-inside:avoid; }
   .viz-head .viz-tools{ display:none !important; }
+  .no-print,.hist-btns,.hl-hint,#viz-tip,.issues{ display:none !important; }
   .viz-canvas{ display:none !important; }
   .print-only{ display:block !important; }
   .viz-canvas{ background:#fff !important; padding:10px !important; }
@@ -915,7 +949,8 @@ input{font-family:inherit}
     </div>
 
     <div class="card">
-      <div class="card-head"><span class="dot orange"></span><h3>Piezas a Cortar</h3></div>
+      <div class="card-head"><span class="dot orange"></span><h3>Piezas a Cortar</h3>
+        <span class="hist-btns"><button data-undo title="Deshacer (Ctrl+Z)" onclick="OptiCorte.undo()" disabled>↶</button><button data-redo title="Rehacer (Ctrl+Y)" onclick="OptiCorte.redo()" disabled>↷</button></span></div>
       <div class="card-body">
         <table class="tbl-edit">
           <thead><tr>
@@ -924,6 +959,7 @@ input{font-family:inherit}
           </tr></thead>
           <tbody id="piezas-body"></tbody>
         </table>
+        <div class="issues" id="ch-issues"></div>
         <div class="add-row">
           <button class="btn-add" onclick="OptiCorte.addPieza()">+ Agregar Pieza</button>
           <button class="btn-paste" onclick="OptiCorte.openPaste('chapas')" title="Pegar lista desde Excel">📋 Pegar</button>
@@ -972,12 +1008,14 @@ input{font-family:inherit}
     </div>
 
     <div class="card">
-      <div class="card-head"><span class="dot"></span><h3>Cortes Requeridos</h3></div>
+      <div class="card-head"><span class="dot"></span><h3>Cortes Requeridos</h3>
+        <span class="hist-btns"><button data-undo title="Deshacer (Ctrl+Z)" onclick="OptiCorte.undo()" disabled>↶</button><button data-redo title="Rehacer (Ctrl+Y)" onclick="OptiCorte.redo()" disabled>↷</button></span></div>
       <div class="card-body">
         <table class="tbl-edit">
           <thead><tr><th>Código</th><th>Largo (mm)</th><th>Cant.</th><th class="col-del"></th></tr></thead>
           <tbody id="cortes-body"></tbody>
         </table>
+        <div class="issues" id="ca-issues"></div>
         <div class="add-row">
           <button class="btn-add" onclick="OptiCorte.addCorte()">+ Agregar Corte</button>
           <button class="btn-paste" onclick="OptiCorte.openPaste('canos')" title="Pegar lista desde Excel">📋 Pegar</button>
@@ -998,6 +1036,7 @@ input{font-family:inherit}
 </main>
 
 <div id="labels-sheet"></div>
+<div id="viz-tip"></div>
 
 <div id="jobs-modal" class="modal-overlay hidden">
   <div class="modal-card">
@@ -1165,8 +1204,50 @@ const state = {
 };
 let chSeq=0, caSeq=0;
 let isDirty=false;
-function markDirty(){ isDirty=true; }
+function markDirty(key){ isDirty=true; if(key!==false) histPush(key); }
 function clearDirty(){ isDirty=false; }
+
+/* ===================== DESHACER / REHACER ===================== */
+const HIST_MAX=100;
+const hist={undo:[],redo:[],lastKey:null,lastAt:0};
+const HIST_LABELS={ 'add-pieza':'agregar pieza','del-pieza':'eliminar pieza','edit-pieza':'editar pieza','add-corte':'agregar corte','del-corte':'eliminar corte','edit-corte':'editar corte','add-mat':'agregar material','del-mat':'quitar material','field':'cambiar datos del material','paste':'pegar lista','preset':'aplicar preset' };
+function snapshot(){
+  return JSON.stringify({
+    chapas:{active:state.chapas.active, mats:state.chapas.mats.map(m=>({...m,result:null,piezas:m.piezas.map(p=>({...p}))}))},
+    canos:{active:state.canos.active, mats:state.canos.mats.map(m=>({...m,result:null,cortes:m.cortes.map(c=>({...c}))}))}
+  });
+}
+function histPush(key){
+  const now=Date.now();
+  // tipeo continuo en el mismo campo → una sola entrada
+  if(key && key===hist.lastKey && now-hist.lastAt<1200){ hist.lastAt=now; return; }
+  hist.undo.push({key,snap:snapshot()}); if(hist.undo.length>HIST_MAX) hist.undo.shift();
+  hist.redo.length=0; hist.lastKey=key||null; hist.lastAt=now; updateHistButtons();
+}
+function histClear(){ hist.undo.length=0; hist.redo.length=0; hist.lastKey=null; updateHistButtons(); }
+function histRestore(snap){
+  const d=JSON.parse(snap);
+  state.chapas.mats=d.chapas.mats.map(m=>newChMat(m)); state.chapas.active=Math.max(0,Math.min(d.chapas.active,state.chapas.mats.length-1));
+  state.canos.mats=d.canos.mats.map(m=>newCaMat(m));   state.canos.active=Math.max(0,Math.min(d.canos.active,state.canos.mats.length-1));
+  loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult();
+  loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult();
+  isDirty=true;
+}
+function histLabel(key){ return HIST_LABELS[String(key||'').split(':')[0]]||'cambio'; }
+function undo(){
+  if(!hist.undo.length){ toast('Nada para deshacer'); return; }
+  const e=hist.undo.pop(); hist.redo.push({key:e.key,snap:snapshot()});
+  histRestore(e.snap); hist.lastKey=null; updateHistButtons(); toast('Deshecho: '+histLabel(e.key));
+}
+function redo(){
+  if(!hist.redo.length){ toast('Nada para rehacer'); return; }
+  const e=hist.redo.pop(); hist.undo.push({key:e.key,snap:snapshot()});
+  histRestore(e.snap); hist.lastKey=null; updateHistButtons(); toast('Rehecho: '+histLabel(e.key));
+}
+function updateHistButtons(){
+  document.querySelectorAll('[data-undo]').forEach(b=>b.disabled=!hist.undo.length);
+  document.querySelectorAll('[data-redo]').forEach(b=>b.disabled=!hist.redo.length);
+}
 function confirmDiscard(action){ return !isDirty || confirm('⚠ Tenés cambios sin guardar en la OT actual.\nSi '+action+' se perderán.\n\n¿Querés continuar de todos modos?'); }
 function nextOtNumber(){
   let best=null;
@@ -1221,9 +1302,9 @@ function renderChMats(){
 }
 function loadChInputs(){ const m=chM(); $('ch-largo').value=m.largo; $('ch-ancho').value=m.ancho; $('ch-espesor').value=m.espesor; $('ch-gap').value=m.gap; $('ch-margen').value=m.margen; $('ch-veta').checked=!!m.veta; $('ch-espmm').value=m.espesorMM; $('ch-dens').value=m.densidad; $('ch-precio').value=m.precioM2; }
 function selectChMat(i){ state.chapas.active=i; loadChInputs(); renderPiezas(); renderChMats(); }
-function addChMat(){ markDirty(); state.chapas.mats.push(newChMat()); state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); }
-function removeChMat(i){ const m=state.chapas.mats[i]; if((m.piezas&&m.piezas.length) && !confirm('¿Quitar el material "'+chLabel(m,i)+'" y sus piezas?')) return; markDirty(); state.chapas.mats.splice(i,1); if(state.chapas.active>=state.chapas.mats.length) state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult(); }
-function chField(f,v){ markDirty(); chM()[f]=v; chM().result=null; if(f==='espesor') renderChMats(); renderChapasResult(); }
+function addChMat(){ markDirty('add-mat'); state.chapas.mats.push(newChMat()); state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); }
+function removeChMat(i){ const m=state.chapas.mats[i]; if((m.piezas&&m.piezas.length) && !confirm('¿Quitar el material "'+chLabel(m,i)+'" y sus piezas?')) return; markDirty('del-mat'); state.chapas.mats.splice(i,1); if(state.chapas.active>=state.chapas.mats.length) state.chapas.active=state.chapas.mats.length-1; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult(); }
+function chField(f,v){ markDirty('field:ch:'+f); chM()[f]=v; chM().result=null; if(f==='espesor') renderChMats(); renderChapasResult(); validatePiezas(); }
 function selChMat(i){ selectChMat(i); }
 
 function renderCaMats(){
@@ -1240,14 +1321,14 @@ function renderCaMats(){
 }
 function loadCaInputs(){ const m=caM(); $('ca-largo').value=m.largo; $('ca-sangria').value=m.sangria; $('ca-reuse').value=m.reuse; $('ca-desc').value=m.desc; $('ca-kgm').value=m.kgM; $('ca-precio').value=m.precioM; }
 function selectCaMat(i){ state.canos.active=i; loadCaInputs(); renderCortes(); renderCaMats(); }
-function addCaMat(){ markDirty(); state.canos.mats.push(newCaMat()); state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); }
-function removeCaMat(i){ const m=state.canos.mats[i]; if((m.cortes&&m.cortes.length) && !confirm('¿Quitar el perfil "'+caLabel(m,i)+'" y sus cortes?')) return; markDirty(); state.canos.mats.splice(i,1); if(state.canos.active>=state.canos.mats.length) state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult(); }
-function caField(f,v){ markDirty(); caM()[f]=v; caM().result=null; if(f==='desc') renderCaMats(); renderCanosResult(); }
+function addCaMat(){ markDirty('add-mat'); state.canos.mats.push(newCaMat()); state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); }
+function removeCaMat(i){ const m=state.canos.mats[i]; if((m.cortes&&m.cortes.length) && !confirm('¿Quitar el perfil "'+caLabel(m,i)+'" y sus cortes?')) return; markDirty('del-mat'); state.canos.mats.splice(i,1); if(state.canos.active>=state.canos.mats.length) state.canos.active=state.canos.mats.length-1; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult(); }
+function caField(f,v){ markDirty('field:ca:'+f); caM()[f]=v; caM().result=null; if(f==='desc') renderCaMats(); renderCanosResult(); validateCortes(); }
 function selCaMat(i){ selectCaMat(i); }
 
 /* ===================== PIEZAS (2D) tabla ===================== */
-function addPieza(p){ markDirty(); chM().piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true}); renderPiezas(); chM().result=null; renderChapasResult(); }
-function delPieza(i){ markDirty(); chM().piezas.splice(i,1); renderPiezas(); chM().result=null; renderChapasResult(); }
+function addPieza(p){ markDirty('add-pieza'); chM().piezas.push(p||{codigo:'',largo:'',ancho:'',cant:1,rot:true}); renderPiezas(); chM().result=null; renderChapasResult(); }
+function delPieza(i){ markDirty('del-pieza'); chM().piezas.splice(i,1); renderPiezas(); chM().result=null; renderChapasResult(); }
 function renderPiezas(){
   const tb=$('piezas-body'); tb.innerHTML='';
   chM().piezas.forEach((p,i)=>{
@@ -1258,15 +1339,48 @@ function renderPiezas(){
       <td data-label="Ancho (mm)"><input type="number" value="${p.ancho}" oninput="OptiCorte.editPieza(${i},'ancho',this.value)"></td>
       <td data-label="Cant."><input type="number" value="${p.cant}" oninput="OptiCorte.editPieza(${i},'cant',this.value)"></td>
       <td class="col-chk" data-label="Rotar"><input class="chk" type="checkbox" ${p.rot?'checked':''} onchange="OptiCorte.editPieza(${i},'rot',this.checked)"></td>
-      <td class="col-del"><button class="btn-del" onclick="OptiCorte.delPieza(${i})">✕</button></td>`;
+      <td class="col-del"><button class="btn-del" tabindex="-1" onclick="OptiCorte.delPieza(${i})">✕</button></td>`;
     tb.appendChild(tr);
   });
+  validatePiezas();
 }
-function editPieza(i,f,v){ markDirty(); chM().piezas[i][f]=v; chM().result=null; renderChapasResult(); }
+
+/* Validación en vivo: filas que no entran, códigos repetidos, margen excesivo */
+function validatePiezas(){
+  const m=chM(); const rows=$('piezas-body').children; const issues=[];
+  const L=parseFloat(m.largo)||0, W=parseFloat(m.ancho)||0, margen=parseFloat(m.margen)||0, veta=!!m.veta;
+  const uW=L-2*margen, uH=W-2*margen;
+  const codes={}; m.piezas.forEach(p=>{ const c=(p.codigo||'').trim().toUpperCase(); if(c) codes[c]=(codes[c]||0)+1; });
+  let nErr=0; const byMargin=[];
+  m.piezas.forEach((p,i)=>{
+    const tr=rows[i]; if(!tr) return;
+    const pw=parseFloat(p.largo), ph=parseFloat(p.ancho), filled=pw>0&&ph>0, rot=!!p.rot&&!veta;
+    const fits = filled && ((pw<=uW&&ph<=uH)||(rot&&ph<=uW&&pw<=uH));
+    const fitsFull = filled && ((pw<=L&&ph<=W)||(rot&&ph<=L&&pw<=W));
+    const bad = filled && L>0 && W>0 && !fits;
+    if(bad){ nErr++; if(fitsFull) byMargin.push(p.codigo||('fila '+(i+1))); }
+    tr.classList.toggle('row-err',bad);
+    tr.title = bad ? `No entra en la chapa: área útil ${fmt(uW)}×${fmt(uH)} mm${veta?' (sin rotar por veta)':(rot?'':' (rotación desactivada)')}` : '';
+    const c=(p.codigo||'').trim().toUpperCase();
+    tr.children[0].classList.toggle('cell-warn', !!c && codes[c]>1);
+  });
+  if(L>0&&W>0&&(uW<=0||uH<=0)) issues.push({t:'err',m:`El margen de ${margen} mm no deja área útil en una chapa de ${fmt(L)}×${fmt(W)} mm.`});
+  else if(nErr) issues.push({t:'err',m:`${nErr} pieza(s) no entran en la chapa (área útil ${fmt(uW)}×${fmt(uH)} mm).`});
+  if(byMargin.length) issues.push({t:'warn',m:`Entrarían en la chapa completa pero no con margen ${margen} mm: ${byMargin.join(', ')}. Revisá el margen.`});
+  const dups=Object.keys(codes).filter(c=>codes[c]>1);
+  if(dups.length) issues.push({t:'warn',m:`Código repetido: ${dups.join(', ')} — compartirán color y etiqueta.`});
+  renderIssues('ch-issues',issues);
+}
+function renderIssues(id,issues){
+  const el=$(id); if(!el) return;
+  el.innerHTML=issues.map(x=>`<div class="issue ${x.t}">${x.t==='err'?'⛔':'⚠'} ${esc(x.m)}</div>`).join('');
+  el.classList.toggle('show',issues.length>0);
+}
+function editPieza(i,f,v){ markDirty('edit-pieza:'+i+':'+f); chM().piezas[i][f]=v; chM().result=null; renderChapasResult(); validatePiezas(); }
 
 /* ===================== CORTES (1D) tabla ===================== */
-function addCorte(c){ markDirty(); caM().cortes.push(c||{codigo:'',largo:'',cant:1}); renderCortes(); caM().result=null; renderCanosResult(); }
-function delCorte(i){ markDirty(); caM().cortes.splice(i,1); renderCortes(); caM().result=null; renderCanosResult(); }
+function addCorte(c){ markDirty('add-corte'); caM().cortes.push(c||{codigo:'',largo:'',cant:1}); renderCortes(); caM().result=null; renderCanosResult(); }
+function delCorte(i){ markDirty('del-corte'); caM().cortes.splice(i,1); renderCortes(); caM().result=null; renderCanosResult(); }
 function renderCortes(){
   const tb=$('cortes-body'); tb.innerHTML='';
   caM().cortes.forEach((c,i)=>{
@@ -1275,11 +1389,53 @@ function renderCortes(){
       <td data-label="Código"><input type="text" value="${esc(c.codigo)}" oninput="OptiCorte.editCorte(${i},'codigo',this.value)"></td>
       <td data-label="Largo (mm)"><input type="number" value="${c.largo}" oninput="OptiCorte.editCorte(${i},'largo',this.value)"></td>
       <td data-label="Cant."><input type="number" value="${c.cant}" oninput="OptiCorte.editCorte(${i},'cant',this.value)"></td>
-      <td class="col-del"><button class="btn-del" onclick="OptiCorte.delCorte(${i})">✕</button></td>`;
+      <td class="col-del"><button class="btn-del" tabindex="-1" onclick="OptiCorte.delCorte(${i})">✕</button></td>`;
     tb.appendChild(tr);
   });
+  validateCortes();
 }
-function editCorte(i,f,v){ markDirty(); caM().cortes[i][f]=v; caM().result=null; renderCanosResult(); }
+function validateCortes(){
+  const m=caM(); const rows=$('cortes-body').children; const issues=[];
+  const barL=parseFloat(m.largo)||0, kerf=parseFloat(m.sangria)||0;
+  const codes={}; m.cortes.forEach(c=>{ const k=(c.codigo||'').trim().toUpperCase(); if(k) codes[k]=(codes[k]||0)+1; });
+  let nErr=0;
+  m.cortes.forEach((c,i)=>{
+    const tr=rows[i]; if(!tr) return;
+    const len=parseFloat(c.largo);
+    const bad = len>0 && barL>0 && len>barL;
+    if(bad) nErr++;
+    tr.classList.toggle('row-err',bad);
+    tr.title = bad ? `Supera el largo comercial de la barra (${fmt(barL)} mm)` : '';
+    const k=(c.codigo||'').trim().toUpperCase();
+    tr.children[0].classList.toggle('cell-warn', !!k && codes[k]>1);
+  });
+  if(nErr) issues.push({t:'err',m:`${nErr} corte(s) superan el largo de la barra (${fmt(barL)} mm).`});
+  if(barL>0 && kerf>=barL/10) issues.push({t:'warn',m:`Sangría de ${fmt(kerf)} mm: muy alta para una barra de ${fmt(barL)} mm.`});
+  const dups=Object.keys(codes).filter(c=>codes[c]>1);
+  if(dups.length) issues.push({t:'warn',m:`Código repetido: ${dups.join(', ')} — compartirán color y etiqueta.`});
+  renderIssues('ca-issues',issues);
+}
+
+/* Navegación con teclado en las tablas: Enter baja (o agrega fila al final), ↑/↓ mueven, Tab al final agrega */
+function setupTableKeys(tbodyId, addFn){
+  const tb=$(tbodyId); if(!tb) return;
+  tb.addEventListener('keydown', e=>{
+    const inp=e.target; if(!(inp instanceof HTMLInputElement)) return;
+    const td=inp.closest('td'), tr=td&&td.parentElement; if(!tr) return;
+    const col=td.cellIndex, row=tr.sectionRowIndex, rows=tb.children;
+    const focusCell=(r,c)=>{ const t=rows[r]; if(!t) return false; const el=t.children[c]&&t.children[c].querySelector('input'); if(!el) return false; el.focus(); if(el.select&&el.type!=='checkbox') el.select(); return true; };
+    const isLastInput = Array.from(tr.querySelectorAll('input')).pop()===inp;
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(row>=rows.length-1){ addFn(); focusCell(rows.length-1,0); } else focusCell(row+1,col);
+    } else if(e.key==='ArrowDown'){ if(focusCell(row+1,col)) e.preventDefault(); }
+    else if(e.key==='ArrowUp'){ if(row>0 && focusCell(row-1,col)) e.preventDefault(); }
+    else if(e.key==='Tab' && !e.shiftKey && isLastInput && row>=rows.length-1){
+      e.preventDefault(); addFn(); focusCell(rows.length-1,0);
+    } else if(e.key==='Escape'){ inp.blur(); }
+  });
+}
+function editCorte(i,f,v){ markDirty('edit-corte:'+i+':'+f); caM().cortes[i][f]=v; caM().result=null; renderCanosResult(); validateCortes(); }
 
 /* ===================== ALGORITMO 2D — MaxRects (BSSF) ===================== */
 function rectsIntersect(a,b){
@@ -1330,7 +1486,8 @@ function packSheets(instances, opts){
   const sheets=[];
   let remaining=instances.slice();
   while(remaining.length){
-    const sheet={ free:[{x:margen,y:margen,w:usableW,h:usableH}], placed:[] };
+    // el gap se cuenta entre piezas, no contra el margen: el área libre inicial lo incluye
+    const sheet={ free:[{x:margen,y:margen,w:usableW+gap,h:usableH+gap}], placed:[] };
     let placedAny=true;
     while(placedAny && remaining.length){
       placedAny=false;
@@ -1435,8 +1592,9 @@ function computeChapa(mat){
     s.placed.forEach(pl=>{ s.placedArea+=pl.w*pl.h; colorFor(pl.code,colorMap); });
     totalPlacedArea+=s.placedArea; totalPlaced+=s.placed.length;
     s.util=s.placedArea/sheetArea*100;
-    // retazo: mayor rect libre
-    s.retazo=s.free.reduce((m,f)=>(f.w*f.h>(m?m.w*m.h:0)?f:m),null);
+    // retazo: mayor rect libre, recortado al área útil (el libre incluye el gap de borde)
+    const cl=s.free.map(f=>({x:f.x,y:f.y,w:Math.min(f.w,L-margen-f.x),h:Math.min(f.h,W-margen-f.y)}));
+    s.retazo=cl.reduce((m,f)=>(f.w*f.h>(m?m.w*m.h:0)?f:m),null);
   });
   const avgUtil = sheets.length? totalPlacedArea/(sheets.length*sheetArea)*100 : 0;
 
@@ -1515,6 +1673,7 @@ function renderChapasResult(){
     html+=`<div class="card print-diagram">
       <div class="viz-head"><h3>Nesting${multi?(' · '+esc(chLabel(m,i))):''}${r.veta?' <span class="veta-tag">veta ⟂ sin rotar</span>':''}</h3>
         <div class="viz-tools">
+          <button class="nav-btn png-btn" title="Descargar esta chapa como PNG" onclick="OptiCorte.exportSheetPNG('${m.id}')">⤓ PNG</button>
           <div class="zoom-ctrl">
             <button class="nav-btn" onclick="OptiCorte.zoomSheet('${m.id}',0.8)" title="Alejar">−</button>
             <span class="zoom-lbl" id="zoom-${m.id}" onclick="OptiCorte.zoomSheet('${m.id}',0)" title="Restablecer zoom">100%</span>
@@ -1532,13 +1691,13 @@ function renderChapasResult(){
     </div>`;
 
     html+=`<div class="card print-route">
-      <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa${multi?(' · '+esc(chLabel(m,i))):''}</h3></div>
+      <div class="card-head"><span class="dot"></span><h3>Detalle por Chapa${multi?(' · '+esc(chLabel(m,i))):''}</h3><span class="hl-hint">click en una pieza → resaltar en el diagrama</span></div>
       <table class="tbl-result"><thead><tr><th>Chapa N°</th><th>Pieza / Código</th><th>Dimensiones</th><th>Cant. en chapa</th></tr></thead><tbody>`;
     r.sheets.forEach((s,si)=>{
       const agg={};
       s.placed.forEach(p=>{ const key=p.code+'|'+p.w+'x'+p.h; agg[key]=agg[key]||{code:p.code,w:p.w,h:p.h,n:0}; agg[key].n++; });
       Object.values(agg).forEach((a,idx)=>{
-        html+=`<tr><td>${idx===0?'<strong>#'+(si+1)+'</strong>':''}</td>
+        html+=`<tr data-mat="${m.id}" data-code="${esc(a.code)}" data-sheet="${si}" class="${m.hl===a.code?'hl-on':''}" title="Resaltar ${esc(a.code)} en el diagrama"><td>${idx===0?'<strong>#'+(si+1)+'</strong>':''}</td>
           <td><span class="swatch" style="background:${r.colorMap[a.code]}"></span>${esc(a.code)}</td>
           <td>${a.w}×${a.h} mm</td><td>${a.n}</td></tr>`;
       });
@@ -1559,7 +1718,7 @@ function navSheet(matId,d){
   drawSheet(m);
 }
 
-function buildSheetSVG(r,idx){
+function buildSheetSVG(r,idx,hl){
   const s=r.sheets[idx];
   const maxW=720, scale=maxW/r.L, h=r.W*scale;
   const padL=32, padT=22, ns='http://www.w3.org/2000/svg';
@@ -1583,23 +1742,117 @@ function buildSheetSVG(r,idx){
   s.placed.forEach(p=>{
     const c=r.colorMap[p.code];
     const x=p.x*scale, y=p.y*scale, w=p.w*scale, hh=p.h*scale;
-    svg+=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${c}" fill-opacity="0.86" stroke="${c}" stroke-width="1.5" rx="2"/>`;
+    const dim = hl && p.code!==hl;               // resaltado: atenuar las demás
+    const op = dim ? 0.18 : 0.86;
+    const stroke = (hl && p.code===hl) ? ' stroke="#1B2535" stroke-width="3"' : ` stroke="${c}" stroke-width="1.5"`;
+    svg+=`<rect class="pz" data-pz="sheet" data-code="${esc(p.code)}" data-n="${p.n}" data-x="${p.x}" data-y="${p.y}" data-w="${p.w}" data-h="${p.h}" data-rot="${p.rot?1:0}" x="${x}" y="${y}" width="${w}" height="${hh}" fill="${c}" fill-opacity="${op}"${stroke} rx="2"/>`;
     if(w>40 && hh>20){
-      svg+=`<text x="${x+w/2}" y="${y+hh/2-3}" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(p.code)}</text>`;
-      svg+=`<text x="${x+w/2}" y="${y+hh/2+11}" fill="#fff" font-size="9" fill-opacity="0.85" text-anchor="middle" dominant-baseline="middle">${p.w}×${p.h}${p.rot?' ⟳':''}</text>`;
+      svg+=`<text pointer-events="none" x="${x+w/2}" y="${y+hh/2-3}" fill="#fff" fill-opacity="${dim?0.5:1}" font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(p.code)}</text>`;
+      svg+=`<text pointer-events="none" x="${x+w/2}" y="${y+hh/2+11}" fill="#fff" fill-opacity="${dim?0.4:0.85}" font-size="9" text-anchor="middle" dominant-baseline="middle">${p.w}×${p.h}${p.rot?' ⟳':''}</text>`;
     }
     // número correlativo (casa con la etiqueta)
     if(p.n!=null && w>22 && hh>16){
-      svg+=`<circle cx="${x+9}" cy="${y+9}" r="7.5" fill="#fff" fill-opacity="0.95" stroke="${c}" stroke-width="1"/>`;
-      svg+=`<text x="${x+9}" y="${y+9}" fill="${c}" font-size="9" font-weight="800" text-anchor="middle" dominant-baseline="central">${p.n}</text>`;
+      svg+=`<circle pointer-events="none" cx="${x+9}" cy="${y+9}" r="7.5" fill="#fff" fill-opacity="${dim?0.5:0.95}" stroke="${c}" stroke-width="1"/>`;
+      svg+=`<text pointer-events="none" x="${x+9}" y="${y+9}" fill="${c}" font-size="9" font-weight="800" text-anchor="middle" dominant-baseline="central">${p.n}</text>`;
     }
   });
+  svg+=`<g class="cotas" pointer-events="none"></g>`;
   svg+=`</g></svg>`;
   return svg;
 }
+
+/* ---- tooltip + cotas al pasar el mouse sobre una pieza ---- */
+function vizTipMove(e){
+  const t=e.target && e.target.closest ? e.target.closest('[data-pz]') : null;
+  const tip=$('viz-tip'); if(!tip) return;
+  if(!t){ tip.style.display='none'; hideCotas(); return; }
+  const d=t.dataset; let html='';
+  if(d.pz==='sheet'){
+    html=`<b>${esc(d.code)}</b> <span class="dim">· N° ${d.n}</span><br>${d.w} × ${d.h} mm${d.rot==='1'?' <span class="dim">(rotada)</span>':''}<br><span class="dim">X:</span> ${fmt(+d.x)} mm &nbsp; <span class="dim">Y:</span> ${fmt(+d.y)} mm<br><span class="dim">desde la esquina sup. izq.</span>`;
+    showCotas(t);
+  } else {
+    html=`<b>${esc(d.code)}</b>${d.n?` <span class="dim">· N° ${d.n}</span>`:''}<br>${d.len} mm<br><span class="dim">Inicio:</span> ${fmt(+d.pos)} mm &nbsp; <span class="dim">Fin:</span> ${fmt(+d.pos + +d.len)} mm`;
+  }
+  tip.innerHTML=html; tip.style.display='block';
+  const pad=14, W=tip.offsetWidth, H=tip.offsetHeight;
+  let x=e.clientX+pad, y=e.clientY+pad;
+  if(x+W>innerWidth-8) x=e.clientX-W-pad; if(y+H>innerHeight-8) y=e.clientY-H-pad;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+let cotasHost=null;
+function showCotas(rect){
+  const svg=rect.closest('svg'); const g=svg&&svg.querySelector('.cotas'); if(!g) return;
+  if(cotasHost && cotasHost!==g) cotasHost.innerHTML='';
+  const x=+rect.getAttribute('x'), y=+rect.getAttribute('y'), w=+rect.getAttribute('width'), h=+rect.getAttribute('height');
+  const st='stroke="#1B2535" stroke-width="1" stroke-dasharray="4 3"', tx='font-size="10" font-weight="700" fill="#1B2535" stroke="#fff" stroke-width="3" paint-order="stroke" text-anchor="middle"';
+  let inner=`<line x1="0" y1="${y+h/2}" x2="${x}" y2="${y+h/2}" ${st}/><line x1="${x+w/2}" y1="0" x2="${x+w/2}" y2="${y}" ${st}/>`;
+  if(x>26) inner+=`<text x="${x/2}" y="${y+h/2-4}" ${tx}>${fmt(+rect.dataset.x)}</text>`;
+  if(y>14) inner+=`<text x="${x+w/2}" y="${y/2+4}" ${tx}>${fmt(+rect.dataset.y)}</text>`;
+  g.innerHTML=inner; cotasHost=g;
+}
+function hideCotas(){ if(cotasHost){ cotasHost.innerHTML=''; cotasHost=null; } }
+
+/* ---- resaltar todas las piezas de un código (click en la hoja de ruta) ---- */
+function hlCode(matId, code, sheetIdx){
+  let m=state.chapas.mats.find(x=>x.id===matId), is2D=true;
+  if(!m){ m=state.canos.mats.find(x=>x.id===matId); is2D=false; }
+  if(!m||!m.result) return;
+  m.hl = (m.hl===code) ? null : code;
+  if(is2D){ if(sheetIdx!=null && m.hl) m.cur=sheetIdx; drawSheet(m); }
+  else { const el=$('casvg-'+m.id); if(el) el.innerHTML=m.result.bars.map((b,idx)=>buildBarSVG(m.result,b,idx,m.hl,m.id)).join(''); }
+  document.querySelectorAll(`[data-mat="${matId}"][data-code]`).forEach(el=>el.classList.toggle('hl-on', !!m.hl && el.dataset.code===m.hl));
+}
+function hlClick(e){
+  const el=e.target && e.target.closest ? e.target.closest('[data-mat][data-code]') : null;
+  if(!el) return;
+  e.preventDefault(); e.stopPropagation();
+  hlCode(el.dataset.mat, el.dataset.code, el.dataset.sheet!=null ? +el.dataset.sheet : null);
+}
+
+/* ---- exportar diagramas como PNG ---- */
+function safeName(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40)||'x'; }
+function fileBase(){ return safeName($('meta-ot').value.trim() || $('projectName').value || 'OptiCorte'); }
+function downloadDataUrl(url,name){ const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+async function exportSheetPNG(matId){
+  const mi=state.chapas.mats.findIndex(x=>x.id===matId), m=state.chapas.mats[mi]; if(!m||!m.result) return;
+  const idx=m.cur||0;
+  let svg=buildSheetSVG(m.result,idx);
+  const vb=svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/); const w=Math.round(+vb[1]), h=Math.round(+vb[2]);
+  svg=svg.replace('<svg ', `<svg width="${w}" height="${h}" `);
+  const png=await svgToPng(svg,w,h); if(!png){ toast('No se pudo generar el PNG','err'); return; }
+  downloadDataUrl(png, `${fileBase()}_${safeName(chLabel(m,mi))}_chapa-${idx+1}.png`);
+  toast(`Chapa ${idx+1} exportada como PNG`,'ok');
+}
+function barSvgInner(r,bar,idx){ // contenido interno del svg de una barra (sin wrapper ni título)
+  const full=buildBarSVG(r,bar,idx);
+  const mt=full.match(/<svg[^>]*>([\s\S]*)<\/svg>/); return mt?mt[1]:'';
+}
+function composeBarsSVG(r,idxs){
+  const W=760, RH=46, TH=20, GAP=12, rowH=RH+TH+GAP, H=idxs.length*rowH;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter,sans-serif">`;
+  idxs.forEach((idx,k)=>{ const y=k*rowH;
+    svg+=`<text x="0" y="${y+13}" font-size="11" font-weight="600" fill="#69768B">Barra #${idx+1} — ${r.barL} mm</text>`;
+    svg+=`<g transform="translate(0,${y+TH})">${barSvgInner(r,r.bars[idx],idx)}</g>`; });
+  return svg+'</svg>';
+}
+async function exportBarPNG(matId,idx){
+  const mi=state.canos.mats.findIndex(x=>x.id===matId), m=state.canos.mats[mi]; if(!m||!m.result) return;
+  const svg=composeBarsSVG(m.result,[idx]);
+  const png=await svgToPng(svg,760,78); if(!png){ toast('No se pudo generar el PNG','err'); return; }
+  downloadDataUrl(png, `${fileBase()}_${safeName(caLabel(m,mi))}_barra-${idx+1}.png`);
+  toast(`Barra ${idx+1} exportada como PNG`,'ok');
+}
+async function exportBarsPNG(matId){
+  const mi=state.canos.mats.findIndex(x=>x.id===matId), m=state.canos.mats[mi]; if(!m||!m.result) return;
+  const idxs=m.result.bars.map((_,i)=>i);
+  const svg=composeBarsSVG(m.result,idxs);
+  const png=await svgToPng(svg,760,idxs.length*78); if(!png){ toast('No se pudo generar el PNG','err'); return; }
+  downloadDataUrl(png, `${fileBase()}_${safeName(caLabel(m,mi))}_barras.png`);
+  toast(`${idxs.length} barra(s) exportadas como PNG`,'ok');
+}
 function drawSheet(m){
   const r=m.result; if(!r)return; const idx=m.cur||0;
-  const el=$('svg-'+m.id); if(el){ el.innerHTML=buildSheetSVG(r,idx);
+  const el=$('svg-'+m.id); if(el){ el.innerHTML=buildSheetSVG(r,idx,m.hl);
     const z=m.zoom||1, svgEl=el.querySelector('svg');
     if(svgEl){ svgEl.style.width=(z*100)+'%'; svgEl.style.maxWidth=z>1?'none':'100%'; } }
   const lbl=$('lbl-'+m.id); if(lbl) lbl.textContent=`Chapa ${idx+1} / ${r.sheets.length}`;
@@ -1800,10 +2053,10 @@ function renderCanosResult(){
       </div></div></div>`;
     }
 
-    html+=`<div class="card print-diagram"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte${multi?(' · '+esc(caLabel(m,mi))):''}</h3></div>
+    html+=`<div class="card print-diagram"><div class="card-head"><span class="dot orange"></span><h3>Diagrama de Corte${multi?(' · '+esc(caLabel(m,mi))):''}</h3><button class="mini-btn no-print" style="margin-left:auto" title="Descargar todas las barras en un PNG" onclick="OptiCorte.exportBarsPNG('${m.id}')">⤓ PNG todas</button></div>
       <div class="card-body" id="casvg-${m.id}" style="display:flex;flex-direction:column;gap:14px"></div></div>`;
 
-    html+=`<div class="card print-route"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta${multi?(' · '+esc(caLabel(m,mi))):''}</h3></div>
+    html+=`<div class="card print-route"><div class="card-head"><span class="dot"></span><h3>Hoja de Ruta${multi?(' · '+esc(caLabel(m,mi))):''}</h3><span class="hl-hint">click en un corte → resaltar en el diagrama</span></div>
       <table class="tbl-result"><thead><tr><th>Barra N°</th><th>Secuencia de cortes</th><th>Desperdicio</th><th>Sobrante útil</th></tr></thead><tbody>`;
     let i=0;
     while(i<r.bars.length){
@@ -1812,7 +2065,7 @@ function renderCanosResult(){
       if(j>i) html+=`<tr class="pattern-row"><td colspan="4">▦ Barras ${i+1} a ${j+1}: mismo patrón de corte (${j-i+1} barras)</td></tr>`;
       for(let b=i;b<=j;b++){
         const bar=r.bars[b];
-        const chips=bar.cuts.map(c=>`<span class="seq-chip"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${c.n!=null?('<b>#'+c.n+'</b> '):''}${esc(c.code)} · ${c.len}mm</span>`).join('');
+        const chips=bar.cuts.map(c=>`<span class="seq-chip${m.hl===c.code?' hl-on':''}" data-mat="${m.id}" data-code="${esc(c.code)}" title="Resaltar ${esc(c.code)} en el diagrama"><span class="swatch" style="background:${r.colorMap[c.code]};margin-right:5px"></span>${c.n!=null?('<b>#'+c.n+'</b> '):''}${esc(c.code)} · ${c.len}mm</span>`).join('');
         html+=`<tr><td><strong>#${b+1}</strong></td><td>${chips}</td>
           <td>${fmt(bar.desperdicio)} mm</td>
           <td>${bar.sobrante>0?`<span style="color:var(--success);font-weight:600">${fmt(bar.sobrante)} mm</span>`:'<span class="muted">—</span>'}</td></tr>`;
@@ -1823,20 +2076,23 @@ function renderCanosResult(){
   });
 
   $('canos-results').innerHTML=html;
-  mats.forEach(m=>{ if(m.result){ const el=$('casvg-'+m.id); if(el) el.innerHTML=m.result.bars.map((b,idx)=>buildBarSVG(m.result,b,idx)).join(''); } });
+  mats.forEach(m=>{ if(m.result){ const el=$('casvg-'+m.id); if(el) el.innerHTML=m.result.bars.map((b,idx)=>buildBarSVG(m.result,b,idx,m.hl,m.id)).join(''); } });
 }
 
-function buildBarSVG(r,bar,idx){
+function buildBarSVG(r,bar,idx,hl,matId){
   const W=760, H=46, scale=W/r.barL;
   const ns='http://www.w3.org/2000/svg';
-  let svg=`<div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Barra #${idx+1} — ${r.barL} mm</div>`;
+  let svg=`<div><div class="bar-title"><span>Barra #${idx+1} — ${r.barL} mm</span>${matId?`<button class="mini-btn no-print" title="Descargar esta barra como PNG" onclick="OptiCorte.exportBarPNG('${matId}',${idx})">⤓ PNG</button>`:''}</div>`;
   svg+=`<svg viewBox="0 0 ${W} ${H}" xmlns="${ns}" font-family="Inter,sans-serif" style="width:100%;height:auto">`;
   svg+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff" stroke="#D2DAE8" stroke-width="1" rx="3"/>`;
-  let cx=0;
+  let cx=0, posMm=0;
   bar.cuts.forEach(c=>{
     const w=c.len*scale, kw=r.kerf*scale;
     const col=r.colorMap[c.code];
-    svg+=`<rect x="${cx}" y="0" width="${w}" height="${H}" fill="${col}" fill-opacity="0.85" stroke="${col}" stroke-width="1"/>`;
+    const dim = hl && c.code!==hl;
+    const stroke = (hl && c.code===hl) ? ' stroke="#1B2535" stroke-width="2.5"' : ` stroke="${col}" stroke-width="1"`;
+    svg+=`<rect class="pz" data-pz="bar" data-code="${esc(c.code)}" data-n="${c.n!=null?c.n:''}" data-len="${c.len}" data-pos="${posMm}" x="${cx}" y="0" width="${w}" height="${H}" fill="${col}" fill-opacity="${dim?0.18:0.85}"${stroke}/>`;
+    posMm+=c.len+r.kerf;
     if(w>34){
       svg+=`<text x="${cx+w/2}" y="${H/2-3}" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(c.code)}</text>`;
       svg+=`<text x="${cx+w/2}" y="${H/2+10}" fill="#fff" font-size="9" fill-opacity="0.9" text-anchor="middle" dominant-baseline="middle">${c.len}mm</text>`;
@@ -2076,7 +2332,7 @@ function newJob(){
   state.chapas.mats=[newChMat()]; state.chapas.active=0; loadChInputs(); renderPiezas(); renderChMats(); renderChapasResult();
   state.canos.mats=[newCaMat()]; state.canos.active=0; loadCaInputs(); renderCortes(); renderCaMats(); renderCanosResult();
   state.presupuesto=newPresupuesto();
-  switchTab('chapas'); clearDirty();
+  switchTab('chapas'); clearDirty(); histClear();
   toast('Nueva OT '+$('meta-ot').value+' iniciada','ok');
 }
 
@@ -2136,7 +2392,7 @@ function loadJob(id){
   // recalcular para mostrar resultados ya hechos
   if(state.chapas.mats.some(m=>m.piezas.length)) calcularChapas(); else renderChapasResult();
   if(state.canos.mats.some(m=>m.cortes.length)) calcularCanos(); else renderCanosResult();
-  clearDirty();
+  clearDirty(); histClear();
   toast('OT '+(j.ot||'')+' cargada','ok');
 }
 
@@ -2179,6 +2435,7 @@ function importPaste(){
     }
   });
   if(!rows.length){ toast('No se reconocieron filas válidas (revisá las columnas)','err'); return; }
+  markDirty('paste');
   if(pasteTarget==='chapas'){
     if($('paste-replace').checked) chM().piezas=rows; else chM().piezas.push(...rows);
     chM().result=null; renderPiezas(); renderChapasResult();
@@ -2186,7 +2443,7 @@ function importPaste(){
     if($('paste-replace').checked) caM().cortes=rows; else caM().cortes.push(...rows);
     caM().result=null; renderCortes(); renderCanosResult();
   }
-  markDirty(); closePaste();
+  closePaste();
   toast(`${rows.length} fila(s) importada(s)${skipped?(' · '+skipped+' omitida(s)'):''}`,'ok');
 }
 
@@ -2371,18 +2628,18 @@ function renderPresetSelects(){
 
 function applyChPreset(v){
   if(v==='') return; const p=getPresets().chapas[+v]; if(!p) return;
-  const m=chM();
+  const m=chM(); markDirty('preset');
   ['largo','ancho','gap','margen','espesorMM','densidad','precioM2'].forEach(k=>{ if(p[k]!==undefined) m[k]=p[k]; });
-  m.espesor=p.nombre||m.espesor; m.veta=!!p.veta; m.result=null; markDirty();
-  loadChInputs(); renderChMats(); renderChapasResult();
+  m.espesor=p.nombre||m.espesor; m.veta=!!p.veta; m.result=null;
+  loadChInputs(); renderChMats(); renderChapasResult(); validatePiezas();
   toast('Material «'+(p.nombre||'')+'» aplicado','ok');
 }
 function applyCaPreset(v){
   if(v==='') return; const p=getPresets().canos[+v]; if(!p) return;
-  const m=caM();
+  const m=caM(); markDirty('preset');
   ['largo','sangria','reuse','kgM','precioM'].forEach(k=>{ if(p[k]!==undefined) m[k]=p[k]; });
-  m.desc=p.nombre||m.desc; m.result=null; markDirty();
-  loadCaInputs(); renderCaMats(); renderCanosResult();
+  m.desc=p.nombre||m.desc; m.result=null;
+  loadCaInputs(); renderCaMats(); renderCanosResult(); validateCortes();
   toast('Perfil «'+(p.nombre||'')+'» aplicado','ok');
 }
 
@@ -2500,7 +2757,7 @@ function openPresupuesto(){
   $('presu-modal').classList.remove('hidden');
 }
 function closePresupuesto(){ $('presu-modal').classList.add('hidden'); }
-function pField(f,v){ markDirty(); state.presupuesto[f]=v; refreshPresupuesto(); }
+function pField(f,v){ markDirty(false); state.presupuesto[f]=v; refreshPresupuesto(); }
 
 function renderOtros(){
   const cont=$('presu-otros'); const arr=state.presupuesto.otros||[];
@@ -2510,9 +2767,9 @@ function renderOtros(){
     <button class="btn-del" onclick="OptiCorte.delOtro(${i})">✕</button>
   </div>`).join('');
 }
-function addOtro(){ markDirty(); state.presupuesto.otros.push({concepto:'',monto:''}); renderOtros(); refreshPresupuesto(); }
-function delOtro(i){ markDirty(); state.presupuesto.otros.splice(i,1); renderOtros(); refreshPresupuesto(); }
-function editOtro(i,f,v){ markDirty(); state.presupuesto.otros[i][f]=v; refreshPresupuesto(); }
+function addOtro(){ markDirty(false); state.presupuesto.otros.push({concepto:'',monto:''}); renderOtros(); refreshPresupuesto(); }
+function delOtro(i){ markDirty(false); state.presupuesto.otros.splice(i,1); renderOtros(); refreshPresupuesto(); }
+function editOtro(i,f,v){ markDirty(false); state.presupuesto.otros[i][f]=v; refreshPresupuesto(); }
 
 function refreshPresupuesto(){
   const c=calcPresupuesto();
@@ -2702,6 +2959,25 @@ function init(){
 
   // cerrar menú imprimir al hacer clic fuera
   document.addEventListener('click', e=>{ if(!e.target.closest('.print-menu')) closePrintMenu(); });
+
+  // deshacer / rehacer con teclado (fuera de modales y del login)
+  document.addEventListener('keydown', e=>{
+    if(!(e.ctrlKey||e.metaKey) || e.altKey) return;
+    const k=e.key.toLowerCase(); if(k!=='z' && k!=='y') return;
+    if(document.querySelector('.modal-overlay:not(.hidden)')) return;
+    if($('app-shell').classList.contains('hidden')) return;
+    if(e.target && e.target.tagName==='TEXTAREA') return;
+    e.preventDefault();
+    if(k==='y' || (k==='z' && e.shiftKey)) redo(); else undo();
+  });
+  // navegación con teclado en las tablas de carga
+  setupTableKeys('piezas-body', ()=>addPieza());
+  setupTableKeys('cortes-body', ()=>addCorte());
+  // tooltip/cotas del diagrama y resaltado por código
+  document.addEventListener('mousemove', vizTipMove);
+  document.addEventListener('mouseleave', ()=>{ const t=$('viz-tip'); if(t) t.style.display='none'; hideCotas(); });
+  $('chapas-results').addEventListener('click', hlClick);
+  $('canos-results').addEventListener('click', hlClick);
   // limpiar modo de impresión al terminar
   window.addEventListener('afterprint', ()=>document.body.classList.remove('pm-all','pm-diagram','pm-route','pm-labels'));
 
@@ -2735,7 +3011,7 @@ init();
 return { switchTab, addPieza, delPieza, editPieza, addCorte, delCorte, editCorte,
          chField, caField, selChMat, selCaMat,
          calcularChapas, calcularCanos, navSheet, zoomSheet, exportExcel, exportPDF,
-         login, logout, print, togglePrintMenu,
+         login, logout, print, togglePrintMenu, undo, redo, exportSheetPNG, exportBarPNG, exportBarsPNG, hlCode,
          saveJob, openJobs, closeJobs, loadJob, deleteJob, newJob, filterJobs,
          openPaste, closePaste, importPaste, exportJobsFile, importJobsFile,
          installApp, openPresupuesto, closePresupuesto, pField, addOtro, delOtro, editOtro, exportPresupuestoPDF,
